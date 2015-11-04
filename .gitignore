@@ -1,6 +1,9 @@
 build
 .gradle
 .nb-gradle
-#gradle.properties
-#build.xml
+### following files are initialized once at repo cloning with default values
+gradle.properties
+.nb-gradle-properties
+build.xml
+###
 MANIFEST.MF
