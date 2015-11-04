@@ -20,7 +20,7 @@ Es fehlen nun folgende Ordner bzw. Dateien (mittels .gitignore sind die festgele
 - build\
 - .gradle
 - .nb-gradle
-- gradle.properties
+- gradle.properties // Diese Datei könnt ihr aus den ursprünglichen Zimmermann-Dateien ziehen, imo braucht man die nicht, außer Gradle-Proxy-Settings, wenn wir in der HS im Proxy das Projekt bauen
 
 Diese Dateien werden mit den folgenden Befehlen angelegt:<br>
 
