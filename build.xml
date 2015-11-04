@@ -1,8 +1,8 @@
 <!-- ANT statt Gradle mit dem Plugin spawn https://plugins.gradle.org/plugin/com.wiredforcode.spawn -->
 <project name="shop" default="restclient" basedir=".">
     <property name="restclientDir" value="C:/Zimmermann/restclient"/>
-    <property name="mavenRepositoryDir" value="C:/Zimmermann/apps/maven-repository"/>
-    <property name="jenkinsDir" value="C:/Zimmermann/apps/jenkins"/>
+    <property name="mavenRepositoryDir" value="C:/Zimmermann/maven-repository"/>
+    <property name="jenkinsDir" value="C:/Zimmermann/jenkins"/>
 
     <property name="h2Version" value="1.4.189"/>
     
@@ -10,13 +10,13 @@
         <os family="windows"/>
     </condition>
     
-    <condition property="sonarBinDir" value="C:/Zimmermann/apps/sonarqube/bin/windows-x86-64">
+    <condition property="sonarBinDir" value="C:/Zimmermann/sonarqube/bin/windows-x86-64">
         <os family="windows"/>
     </condition>
-    <condition property="sonarBinDir" value="C:/Zimmermann/apps/sonarqube/bin/linux-x86-64">
+    <condition property="sonarBinDir" value="C:/Zimmermann/sonarqube/bin/linux-x86-64">
         <os family="unix"/>
     </condition>
-    <condition property="sonarBinDir" value="C:/Zimmermann/apps/sonarqube/bin/macosx-universal-64">
+    <condition property="sonarBinDir" value="C:/Zimmermann/sonarqube/bin/macosx-universal-64">
         <os family="mac"/>
     </condition>
     <condition property="sonarPrefix" value="Start" else="">

@@ -20,14 +20,14 @@ Es fehlen nun folgende Ordner bzw. Dateien (mittels .gitignore sind die festgele
 - build\
 - .gradle
 - .nb-gradle
-- gradle.properties // Diese Datei könnt ihr aus den ursprünglichen Zimmermann-Dateien ziehen, imo braucht man die nicht, außer Gradle-Proxy-Settings, wenn wir in der HS im Proxy das Projekt bauen
+- gradle.properties // Diese Datei könnt ihr aus den ursprünglichen Zimmermann-Dateien ziehen, die brauchen wir wegen dem test-Task in der build.gradle
 
 Diese Dateien werden mit den folgenden Befehlen angelegt:<br>
 
 <h3>3) Mit Gradle aktuellen Stand bauen</h3>
 
 2.1) Im Verzeichnis das cmd öffnen<br>
-2.2) gradlew clean // Gradle löscht mit diesem Befehl potentiell vorhandene Unterordner siehe gradle.build<br>
+2.2) gradlew clean // Gradle löscht mit diesem Befehl potentiell vorhandene Unterordner (und zieht die Dependencies wobei ich nicht verstehe warum^^)<br>
 2.3) gradlew compileTestJava // Gradle zieht mit diesem Befehl die Dependencies und erstellt die .jars<br>
 
 
