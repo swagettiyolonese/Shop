@@ -1,6 +1,6 @@
 <!-- ANT statt Gradle mit dem Plugin spawn https://plugins.gradle.org/plugin/com.wiredforcode.spawn -->
 <project name="shop" default="restclient" basedir=".">
-    <property name="restclientDir" value="C:/Zimmermann/apps/restclient"/>
+    <property name="restclientDir" value="C:/Zimmermann/restclient"/>
     <property name="mavenRepositoryDir" value="C:/Zimmermann/apps/maven-repository"/>
     <property name="jenkinsDir" value="C:/Zimmermann/apps/jenkins"/>
 
