@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+ * Copyright (C) 2013 Juergen Zimmermann, Hochschule Karlsruhe
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+
+<web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd"
+         version="3.1">
+  <display-name>shop</display-name>
+  <context-param>
+    <description>Mapping fuer accept in einem Webbrowser: Die Extension json ist inkompatibel mit Swagger 2.x</description>
+    <param-name>resteasy.media.type.mappings</param-name>
+    <param-value>xml : application/xml, image : image/*, text : text/plain</param-value>
+    <!--
+    <param-value>json : application/json, xml : application/xml, image : image/*, text : text/plain</param-value>
+    -->
+  </context-param>
+  <context-param>
+    <description>Pfadangabe bei Verletzung der Bean Validation im JSON-Response aus Sicherheitsgruenden unterdruecken</description>
+    <param-name>resteasy.validation.suppress.path</param-name>
+    <param-value>false</param-value>
+  </context-param>
+  <context-param>
+    <description>Aktivierung von Weld Probe</description>
+    <param-name>org.jboss.weld.development</param-name>
+    <param-value>true</param-value>
+  </context-param>
+  <session-config>
+    <session-timeout>15</session-timeout>
+    <cookie-config>
+      <secure>true</secure>
+    </cookie-config>
+    <tracking-mode>COOKIE</tracking-mode>
+  </session-config>
+  <!--
+  <servlet>
+    <servlet-name>DefaultJaxrsConfig</servlet-name>
+    <servlet-class>com.wordnik.swagger.jaxrs.config.DefaultJaxrsConfig</servlet-class>
+    <init-param>
+      <param-name>api.version</param-name>
+      <param-value>1.0</param-value>
+    </init-param>
+    <init-param>
+      <param-name>swagger.api.basepath</param-name>
+      <param-value>https://localhost:8443/shop/rest</param-value>
+    </init-param>
+    <init-param>
+      <param-name>scan.all.resources</param-name>
+      <param-value>true</param-value>
+    </init-param>
+    <init-param>
+      <param-name>ignore.routes</param-name>
+      <param-value>shop/rest/swagger.json</param-value>
+    </init-param>
+    <load-on-startup>2</load-on-startup>
+  </servlet>
+  -->
+</web-app>

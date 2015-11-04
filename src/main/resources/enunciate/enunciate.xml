@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<enunciate label="Shop" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:noNamespaceSchemaLocation="http://enunciate.webcohesion.com/schemas/enunciate-1.30.xsd">
+
+<!-- wird gespeichert in private\cache\retriever\enunciate.webcohesion.com\schemas\enunciate-1.30.xsd -->
+
+    <modules>
+        <!--
+        <docs docsDir="/enunciate" splashPackage="de.shop" title="Shop Web Service API" copyright="(C) J&#252;rgen Zimmermann"/>
+        -->
+        <docs docsDir="/enunciate" title="Greetings Web Service API" copyright="(C) J&#252;rgen Zimmermann"/>
+    </modules>
+</enunciate>

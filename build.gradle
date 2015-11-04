@@ -1,0 +1,929 @@
+/*
+ * Copyright (C) 2015 Juergen Zimmermann, Hochschule Karlsruhe
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+//  Aufrufe
+//  1) Webanwendung und Tests uebersetzen
+//        gradlew compileJava
+//        gradlew compileTestJava
+//
+//  2) WAR erstellen
+//        gradlew assemble
+//
+//  3) (Un-) Deployment der WAR-Datei (einschl. Erstellen)
+//        gradlew deploy
+//        gradlew undeploy
+//
+//  4) Tests laufen lassen
+//        gradlew test
+//
+//  5) javadoc erstellen
+//        gradlew javadoc
+//
+//  6) QS durch Sonarqube und dabei die Tests ueberspringen
+//        gradlew -x test sonarqube
+//
+//  7) Projektreport erstellen
+//        gradlew projectReport
+//        gradlew dependencies
+//        gradlew dependencies --configuration providedCompile
+//        gradlew htmlDependencyReport
+//
+//  8) Sicherheitsueberpruefung durch OWASP Dependency Check
+//        gradlew checkDeps             // via ANT-Plugin
+//        gradlew dependencyCheck
+//
+//  9) Neue Abhaengigkeiten ueberpruefen
+//        gradlew dependencyUpdates
+//
+//  10) Report ueber die Lizenzen der eingesetzten Fremdsoftware
+//        gradlew generateLicenseReport
+//
+//  11) Properties auflisten
+//        gradlew properties
+//
+//  12) Verfuegbare Tasks auflisten
+//        gradlew tasks
+//
+//  13) pom.xml fuer Maven generieren
+//        gradlew pom
+//
+//  14) Passwort in "Software Engineering" verschluesseln (Argumente in gradle.properties)
+//        gradlew verschluesseln
+//
+//  15) Daemon starten und stoppen
+//        gradlew --daemon
+//        gradlew --stop
+//
+//  16) Einmalige Initialisierung des Gradle Wrappers in der richtigen Version
+//      (dazu ist ggf. eine Internetverbindung erforderlich)
+//        gradle wrapper
+
+// Gradle-Plugin fuer NetBeans:
+//    https://github.com/kelemen/netbeans-gradle-project
+//    http://plugins.netbeans.org/plugin/44510/gradle-support
+
+buildscript {
+    repositories {
+        mavenLocal()
+        jcenter()
+
+        maven {
+            name 'gradle plugins'
+            url 'https://plugins.gradle.org/m2/'
+        }
+        maven {
+            name 'jpamodelgen plugin'
+            url 'https://bintray.com/artifact/download/iboyko/gradle-plugins'
+        }
+    }
+    dependencies {
+        classpath 'io.spring.gradle:dependency-management-plugin:0.5.3.RELEASE'
+        classpath 'at.comm_unity.gradle.plugins:jpamodelgen-plugin:1.1.0'
+        classpath 'org.sonarqube.gradle:gradle-sonarqube-plugin:1.0'
+        classpath 'org.asciidoctor:asciidoctorj-pdf:1.5.0-alpha.9'
+        classpath 'org.asciidoctor:asciidoctor-gradle-plugin:1.5.2'
+        classpath 'gradle.plugin.com.thoughtworks.tools:dependency-check:0.0.6'
+        classpath 'com.github.ben-manes:gradle-versions-plugin:0.11.3'
+        classpath 'gradle.plugin.com.github.jk1:gradle-license-report:0.3.2'
+    }
+}
+
+apply plugin: 'war'
+apply plugin: 'io.spring.dependency-management'
+apply plugin: 'at.comm_unity.gradle.plugins.jpamodelgen'
+apply plugin: 'org.sonarqube'
+apply plugin: 'org.asciidoctor.convert'
+apply plugin: 'dependency.check'
+apply plugin: 'maven'
+apply plugin: 'project-report'
+apply plugin: 'com.github.ben-manes.versions'
+apply plugin: 'com.github.jk1.dependency-license-report'
+
+// Der neue Plugin-Mechanismus (ab Gradle 2.1) funktioniert NICHT mit dependency-management-plugin von Spring,
+//plugins {
+//    id 'war'
+//
+//    // https://spring.io/blog/2015/02/23/better-dependency-management-for-gradle
+//    // Versionsnummern fuer Plugins koennen nicht ueber Properties definiert werden,
+//    // damit sich ein Build immer gleich verhaelt.
+//    id 'io.spring.dependency-management' version '0.5.3.RELEASE'
+//    
+//    id 'at.comm_unity.gradle.plugins.jpamodelgen' version '1.1.0'
+//
+//    // http://docs.sonarqube.org/display/SONAR/Analyzing+with+Gradle
+//    id 'org.sonarqube' version '1.0'
+//
+//    // https://github.com/wmaintw/DependencyCheck
+//    id 'dependency.check' version '0.0.6'
+//    
+//    // https://docs.gradle.org/current/userguide/maven_plugin.html
+//    id 'maven'
+//    
+//    id 'project-report'
+//    
+//    // https://github.com/ben-manes/gradle-versions-plugin
+//    id 'com.github.ben-manes.versions' version '0.11.3'
+//
+//    // https://github.com/jk1/Gradle-License-Report
+//    id 'com.github.jk1.dependency-license-report' version '0.3.2'
+//}
+
+archivesBaseName = 'shop'
+group = 'de.shop'
+version = '1.0'
+
+defaultTasks 'compileTestJava'
+
+ext {
+    gradleVersion = '2.8'
+
+    javaVersion = '1.8'
+    sourceCompatibility = "${javaVersion}"
+    //targetCompatibility = "${sourceCompatibility}"
+    
+    currentYear = Calendar.getInstance().get(Calendar.YEAR)
+    
+    modulesDir = "${System.getenv('JBOSS_HOME')}/modules/system/layers/base"
+    endorsedDirs = "${modulesDir}/javax/xml/bind/api/main,${modulesDir}/com/sun/xml/bind/main,${modulesDir}/javax/jws/api/main,${modulesDir}/org/apache/cxf/main,${modulesDir}/org/apache/cxf/impl/main"
+
+    wildflySpecApiVersion = '10.0.0.CR2'
+    cdiApiVersion = '2.0-EDR1'
+    weldApiVersion = '3.0.Alpha14'
+    weldVersion = '3.0.0.Alpha13'
+    validationApiVersion = '1.1.0.Final'
+    resteasyBomVersion = '3.0.13.Final'
+    classmateVersion = '1.2.0'
+    // https://issues.jboss.org/browse/RESTEASY-1202
+    //jacksonVersion = '2.6.3'
+    jacksonVersion = '2.6.0-rc3'
+    hibernateValidatorVersion = '5.2.2.Final'
+
+    hibernateVersion = '5.0.2.Final'
+
+    // In WildFly ist urspruengl. 2.5.5.CR1 wegen JBoss EAP enthalten.
+    // Erst ab 2.6 gibt es @RolesAllowed, wozu DeltaSpike benoetigt wird.
+    // Bei 2.7 wird BASIC-Authentifizierung fuer REST nicht unterstuetzt.
+    picketlinkVersion = '2.6.1.Final'
+    deltaspikeVersion = '1.5.0'
+
+    primefacesVersion = '5.3'
+    primefacesAllThemesVersion = '1.0.10'
+    primefacesResourcesCkeditorVersion = '3.2.0'
+    atmosphereVersion = '2.4.0-RC6'
+    commonsFileuploadVersion = '1.3.1'
+    poiVersion = '3.13'
+    romeVersion = '1.0'
+
+    commonsLang3Version = '3.4'
+    swaggerJaxrsVersion = '1.5.4'
+
+    junitVersion = '4.12'
+    assertjVersion = '3.2.0'
+
+    mavenVersion = '3.3.3'
+    wagonVersion = '2.10'
+    shrinkwrapResolverVersion = '2.2.0'
+    shrinkwrapVersion = '1.2.2'
+    arquillianBomVersion = '1.1.10.Final'
+    wildflyArquillianVersion = '1.1.0.Alpha1'
+    arquillianManagedOrRemote = 'remote'
+    cdiUnitVersion = '3.1.3'
+    mockitoVersion = '2.0.31-beta'
+
+    // WildFly nutzt HttpClient 4.3.x
+    httpclientVersion = '4.5.1'
+    httpcoreVersion = '4.4.3'
+    grapheneWebdriverVersion = '2.1.0.Alpha2'
+    arquillianRecorderScreenshooterImplBaseVersion = '1.1.0.Alpha4'
+    arquillianBrowserScreenshooterVersion = "${grapheneWebdriverVersion}"
+    arquillianDroneBomVersion = '2.0.0.Alpha5'
+    seleniumVersion = '2.48.2'
+    
+    plantumlVersion = '8031'
+    enunciateVersion = '2.0.0'
+    
+    dependencyCheckVersion = '1.3.1'
+    owaspAutoUpdate = true
+    h2dependencyCheckVersion = '1.3.176'
+
+    // Generierung des SOAP-Clients
+    jaxbApiVersion = '2.2.12'
+    jaxbCoreVersion = '2.2.11'
+    jaxbXjcVersion = "${jaxbCoreVersion}"
+    cxfVersion = '3.1.2-jbossorg-2'
+
+    jbossRepository = 'https://repository.jboss.org/nexus/content/groups/public'
+    primefacesRepository = 'http://repository.primefaces.org'
+}
+
+if (!hasProperty('mainClass')) {
+    ext.mainClass = ''
+}
+
+configurations {
+    plantuml
+    enunciate
+    depCheck
+    depCheck130
+    gensoapClient
+}
+
+repositories {
+    mavenLocal()
+    jcenter()
+    maven {
+        name 'JBoss'
+        url jbossRepository
+    }
+    maven {
+        name 'PrimeFaces'
+        url primefacesRepository
+    }
+    //mavenCentral()
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-bom:${shrinkwrapResolverVersion}"
+        mavenBom "org.jboss.shrinkwrap:shrinkwrap-bom:${shrinkwrapVersion}"
+        mavenBom "org.jboss.arquillian:arquillian-bom:${arquillianBomVersion}"
+
+        mavenBom "org.jboss.resteasy:resteasy-bom:${resteasyBomVersion}"
+        mavenBom "org.wildfly:wildfly-spec-api:${wildflySpecApiVersion}"
+        mavenBom "org.picketlink:picketlink-javaee-6.0:${picketlinkVersion}"
+
+        //mavenBom "org.jboss.arquillian.selenium:selenium-bom:${seleniumVersion}"
+        mavenBom "org.jboss.arquillian.extension:arquillian-drone-bom:${arquillianDroneBomVersion}"
+        
+        mavenBom "org.apache.cxf:cxf:${cxfVersion}"
+    }
+}
+
+// Folgende abhaengige Komponenten muessen aus dem Maven-Repository von JBoss manuell ins eigene Repository kopiert werden:
+// org/jboss/arquillian/core/arquillian-core-impl-base/1.1.8.Final/arquillian-core-impl-base-1.1.8.Final-tests.jar
+// org/jboss/arquillian/test/arquillian-test-impl-base/1.1.8.Final/arquillian-test-impl-base-1.1.8.Final-tests.jar
+
+dependencies {
+    providedCompile('org.hibernate.javax.persistence:hibernate-jpa-2.1-api',
+                    'org.hibernate:hibernate-core',
+                    "javax.validation:validation-api:${validationApiVersion}",
+                    // http://docs.jboss.org/hibernate/stable/validator/reference/en-US/html/validator-annotation-processor.html
+                    "org.hibernate:hibernate-validator-annotation-processor:${hibernateValidatorVersion}",
+                    'org.jboss.spec.javax.el:jboss-el-api_3.0_spec',
+        
+                    'org.jboss.spec.javax.xml.bind:jboss-jaxb-api_2.2_spec',
+
+                    "javax.enterprise:cdi-api:${cdiApiVersion}",
+                    "org.jboss.weld:weld-api:${weldApiVersion}",
+                    'org.jboss.spec.javax.ejb:jboss-ejb-api_3.2_spec',
+                    'org.jboss.spec.javax.interceptor:jboss-interceptors-api_1.2_spec',
+                    'org.jboss.spec.javax.annotation:jboss-annotations-api_1.2_spec',
+                    'org.jboss.spec.javax.transaction:jboss-transaction-api_1.2_spec',
+                    'com.sun.mail:javax.mail',
+
+                    // 'org.jboss.spec.javax.ws.rs:jboss-jaxrs-api_2.0_spec',
+                    // @Wrapped und @Cache sowie org.jboss.resteasy:jaxrs-api
+                    "org.jboss.resteasy:resteasy-jaxrs:${resteasyBomVersion}",
+                    "org.jboss.resteasy:resteasy-jackson-provider:${resteasyBomVersion}",
+                    "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:${jacksonVersion}",
+                    "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:${jacksonVersion}",
+                    "com.fasterxml.jackson.core:jackson-core:${jacksonVersion}",
+                    "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}",
+                    "com.fasterxml.jackson.module:jackson-module-jaxb-annotations:${jacksonVersion}",
+                    "com.fasterxml.jackson.core:jackson-annotations:${jacksonVersion}",
+                    "org.jboss.resteasy:resteasy-jackson2-provider:${resteasyBomVersion}",
+                    // ViolationReport und ResteasyConstraintViolation
+                    "com.fasterxml:classmate:${classmateVersion}",
+                    "org.jboss.resteasy:resteasy-validator-provider-11:${resteasyBomVersion}",
+                    "org.jboss.resteasy:resteasy-jaxb-provider:${resteasyBomVersion}",
+                    "org.apache.commons:commons-lang3:${commonsLang3Version}",
+                    // swagger-jaxrs ist fuer JAX-RS 1.1   https://github.com/swagger-api/swagger-core/issues/1210#issuecomment-119129404
+                    "io.swagger:swagger-jersey2-jaxrs:${swaggerJaxrsVersion}",
+
+                    'org.jboss.spec.javax.enterprise.concurrent:jboss-concurrency-api_1.0_spec',
+
+                    'org.jboss.spec.javax.xml.ws:jboss-jaxws-api_2.2_spec',
+                    'org.jboss.ws:jbossws-api',
+
+                    'org.jboss.spec.javax.servlet:jboss-servlet-api_3.1_spec',
+                    'org.jboss.spec.javax.faces:jboss-jsf-api_2.2_spec',
+                    // WildFly Elytron wird PicketBox und JAAS ersetzen:  https://community.jboss.org/wiki/WildFlyElytron-ProjectSummary
+                    // KeyCloak statt PicketLink http://blog.keycloak.org/2015/05/securing-microservices.html
+                    "org.picketlink:picketlink-api:${picketlinkVersion}",
+                    "org.picketlink:picketlink-common:${picketlinkVersion}",
+                    "org.picketlink:picketlink-impl:${picketlinkVersion}",
+                    "org.picketlink:picketlink-idm-api:${picketlinkVersion}",
+                    "org.picketlink:picketlink-idm-impl:${picketlinkVersion}",
+                    // AccountTypeEntity, RoleTypeEntity, GroupTypeEntity, PasswordCredentialTypeEntity, IdentityTypeEntity
+                    "org.picketlink:picketlink-idm-simple-schema:${picketlinkVersion}")
+
+                    //'org.jboss.spec.javax.security.jacc:jboss-jacc-api_1.5_spec'
+                    // org.wildfly.controller.client.ModelControllerClient und org.jboss.dmr.ModelNode; dmr = Detyped Model Representation
+                    //'org.wildfly:wildfly-controller-client',
+                    // org.jboss.security.SimpleGroup
+                    //"org.picketbox:jbosssx:${picketboxVersion}",
+                    // org.jboss.security.client.SecurityClient: fuer Login bei EJBs
+                    //"org.picketbox:jboss-security-spi:${picketboxVersion}")
+
+    compile("org.primefaces:primefaces:${primefacesVersion}",
+            "org.primefaces.themes:all-themes:${primefacesAllThemesVersion}",
+            "org.primefaces.extensions:resources-ckeditor:${primefacesResourcesCkeditorVersion}",
+            "org.atmosphere:atmosphere-runtime:${atmosphereVersion}",
+            "commons-fileupload:commons-fileupload:${commonsFileuploadVersion}",
+            "org.apache.poi:poi:${poiVersion}",
+            "rome:rome:${romeVersion}",
+
+            "org.picketlink:picketlink-deltaspike:${picketlinkVersion}",
+            "org.apache.deltaspike.core:deltaspike-core-api:${deltaspikeVersion}",
+            "org.apache.deltaspike.core:deltaspike-core-impl:${deltaspikeVersion}",
+            "org.apache.deltaspike.modules:deltaspike-security-module-api:${deltaspikeVersion}",
+            "org.apache.deltaspike.modules:deltaspike-security-module-impl:${deltaspikeVersion}")
+
+    testCompile("junit:junit:${junitVersion}",
+                "org.assertj:assertj-core:${assertjVersion}",
+
+                // https://github.com/shrinkwrap/resolver/blob/master/README.asciidoc
+                //"org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-depchain:${shrinkwrapResolverVersion}@pom",
+                // Eine abhaengige POM-Datei, verwendet nicht die Properties aus einer BOM-Datei
+
+                "org.apache.maven:maven-aether-provider:${mavenVersion}",
+                "org.apache.maven:maven-settings:${mavenVersion}",
+                "org.apache.maven:maven-settings-builder:${mavenVersion}",
+                "org.apache.maven.wagon:wagon-provider-api:${wagonVersion}",
+                "org.apache.maven.wagon:wagon-file:${wagonVersion}",
+                "org.apache.maven.wagon:wagon-http-lightweight:${wagonVersion}",
+
+                "org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-api-maven:${shrinkwrapResolverVersion}",
+                "org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-spi-maven:${shrinkwrapResolverVersion}",
+                "org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-api:${shrinkwrapResolverVersion}",
+                "org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-spi:${shrinkwrapResolverVersion}",
+                "org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-api-maven-archive:${shrinkwrapResolverVersion}",
+                "org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-impl-maven:${shrinkwrapResolverVersion}",
+                "org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-impl-maven-archive:${shrinkwrapResolverVersion}",
+
+                //[group: 'org.jboss.shrinkwrap', name: 'shrinkwrap-depchain', ext: 'pom'],
+
+                "org.wildfly.arquillian:wildfly-arquillian-container-${arquillianManagedOrRemote}:${wildflyArquillianVersion}",
+                // "org.jboss.arquillian.core:arquillian-core-impl-base-tests:${arquillianBomVersion}",
+                'org.jboss.arquillian.junit:arquillian-junit-container',
+                'org.jboss.arquillian.protocol:arquillian-protocol-servlet',
+
+                'org.jboss.resteasy:resteasy-client',
+                "org.apache.httpcomponents:httpcore:${httpcoreVersion}",
+                "org.apache.httpcomponents:httpclient:${httpclientVersion}",
+                "org.mockito:mockito-core:${mockitoVersion}",
+                "org.jboss.weld.se:weld-se-core:${weldVersion}",
+                "org.jboss.weld:weld-spi:${weldApiVersion}",
+                "org.jboss.weld:weld-core-impl:${weldVersion}",
+                //CDI-Unit findet nicht die Implementierungen zu den Interfaces in PicketLink: Identity, IdentityManager, RelationshipManager
+                //"org.jglue.cdi-unit:cdi-unit:${cdiUnitVersion}",
+                //"org.jboss.weld.module:weld-web:${weldVersion}",
+
+                "org.seleniumhq.selenium:selenium-java:${seleniumVersion}",
+                "org.seleniumhq.selenium:selenium-firefox-driver:${seleniumVersion}",
+                "org.seleniumhq.selenium:selenium-chrome-driver:${seleniumVersion}",
+                "org.seleniumhq.selenium:selenium-htmlunit-driver:${seleniumVersion}",
+                "org.seleniumhq.selenium:selenium-ie-driver:${seleniumVersion}",
+                "org.seleniumhq.selenium:selenium-remote-driver:${seleniumVersion}",
+                "org.seleniumhq.selenium:selenium-api:${seleniumVersion}",
+                "org.seleniumhq.selenium:selenium-support:${seleniumVersion}",
+                //"org.jboss.arquillian.graphene:graphene-webdriver:${grapheneWebdriverVersion}@pom",
+                "org.arquillian.extension:arquillian-recorder-screenshooter-impl-base:${arquillianRecorderScreenshooterImplBaseVersion}",
+                "org.jboss.arquillian.graphene:arquillian-browser-screenshooter:${arquillianBrowserScreenshooterVersion}")
+
+    plantuml "net.sourceforge.plantuml:plantuml:${plantumlVersion}"
+
+    enunciate("com.webcohesion.enunciate:enunciate-core:${enunciateVersion}",
+              "com.webcohesion.enunciate:enunciate-docs:${enunciateVersion}",
+              "com.webcohesion.enunciate:enunciate-jaxrs:${enunciateVersion}",
+              "com.webcohesion.enunciate:enunciate-jaxb:${enunciateVersion}",
+              "com.webcohesion.enunciate:enunciate-jackson:${enunciateVersion}",
+              "com.webcohesion.enunciate:enunciate-core-annotations:${enunciateVersion}",
+              "com.webcohesion.enunciate:enunciate-javac-support:${enunciateVersion}",
+              fileTree(dir: "${System.getenv('JAVA_HOME')}/lib", include: 'tools.jar'),
+              "javax.ws.rs:javax.ws.rs-api:2.0.1",
+              "org.glassfish.jersey.core:jersey-server:2.9.1",
+              "org.freemarker:freemarker:2.3.23",
+              "com.fasterxml.jackson.core:jackson-databind:2.5.3")
+    // https://github.com/stoicflame/enunciate/releases
+    // enunciate(fileTree(dir: 'C:/Software/enunciate/lib', include: '*.jar'))
+    
+    depCheck "org.owasp:dependency-check-ant:${dependencyCheckVersion}"
+    depCheck130 'org.owasp:dependency-check-ant:1.3.0'
+    
+    gensoapClient("javax.xml.bind:jaxb-api:${jaxbApiVersion}",
+                  "com.sun.xml.bind:jaxb-core:${jaxbCoreVersion}",
+                  "com.sun.xml.bind:jaxb-xjc:${jaxbXjcVersion}",
+                  'org.apache.cxf:cxf-tools-wsdlto-frontend-jaxws',
+                  'org.apache.cxf:cxf-tools-wsdlto-databinding-jaxb',
+                  'org.apache.cxf:cxf-core',
+                  'org.apache.cxf:cxf-tools-wsdlto-core',
+                  'org.apache.cxf:cxf-tools-validator',
+                  'org.apache.cxf:cxf-tools-common',
+                  'org.apache.cxf:cxf-rt-bindings-soap',
+                  'org.apache.cxf:cxf-rt-wsdl',
+                  'org.apache.ws.xmlschema:xmlschema-core',
+                  'org.apache.velocity:velocity')
+}
+
+jpaModelgen {
+    // https://docs.gradle.org/current/userguide/tutorial_using_tasks.html
+    // https://docs.gradle.org/current/dsl/org.gradle.api.Task.html
+    // https://docs.gradle.org/current/userguide/more_about_tasks.html
+    logger.info "os.name = ${System.properties['os.name']}"
+    logger.info "java.version = ${System.properties['java.version']}"
+    logger.info "gradleVersion = ${project.gradle.gradleVersion}"
+    logger.info "JAVA_HOME = ${System.getenv('JAVA_HOME')}"
+    logger.info "JBOSS_HOME = ${System.getenv('JBOSS_HOME')}"
+    logger.info ''
+
+    library "org.hibernate:hibernate-jpamodelgen:${hibernateVersion}"
+    //jpaModelgenSourcesDir = 'src/jpaModelgen/java'
+}
+
+compileJpaModelgen {
+    includes += ['**/domain/*.java',
+                 '**/util/persistence/*Auditable.java',
+                 '**/util/persistence/File.java',
+                 '**/util/persistence/MimeType.java',
+                 '**/util/persistence/MultimediaType.java',
+                 '**/util/persistence/StringIam.java',
+                 '**/util/Constants.java',
+                 '**/util/ShopRuntimeException.java',
+                 '**/util/AbstractShopException.java',
+                 '**/util/Strings.java',
+                 '**/iam/business/IdentityAccessManagement.java',
+                 '**/util/interceptor/Log.java',
+                 '**/iam/domain/*.java']
+    //excludes += ['**/domain/*Listener.java']
+}
+
+sourceCompatibility = "${javaVersion}"
+compileJava.options.compilerArgs += ['-proc:none', '-parameters', '-Xlint:all', '-Xdiags:verbose']
+compileJava.options.encoding = 'UTF-8'
+compileTestJava.options.encoding = 'ISO-8859-1'        // Umlaute durch JAX-WS
+
+war {
+    // https://docs.gradle.org/current/userguide/war_plugin.html
+    // https://docs.gradle.org/current/dsl/org.gradle.api.tasks.bundling.War.html
+    classpath = classpath.filter { file ->
+        if (!file.name.startsWith('hibernate-jpamodelgen') &&
+            !file.name.startsWith('jboss-logging-annotations') &&
+            !file.name.startsWith('bcmail-jdk14') &&
+            !file.name.startsWith('bcprov-jdk14') &&
+            !file.name.startsWith('bctsp-jdk14') &&
+            !file.name.startsWith('commons-codec') &&
+            !file.name.startsWith('jdom')) {
+            return true;
+        }
+    }
+    
+    archiveName = "${archivesBaseName}.war"
+    
+    doLast() {
+        logger.info "\"${archiveName}\" im Verzeichnis \"${libsDir}\" erstellt"
+    }
+}
+
+test {
+    // https://docs.gradle.org/current/dsl/org.gradle.api.tasks.testing.Test.html
+    // siehe gradle.properties
+    include "${includeTests}"
+    exclude "${excludeTests}"
+
+    // fuer den ArchiveBuilder mittels ShrinkWrap Resolver
+    systemProperty 'mavenOffline', "${mavenOffline}"
+    systemProperty 'picketlinkVersion', "${picketlinkVersion}"
+    systemProperty 'deltaspikeVersion', "${deltaspikeVersion}"
+    systemProperty 'primefacesVersion', "${primefacesVersion}"
+    systemProperty 'primefacesAllThemesVersion', "${primefacesAllThemesVersion}"
+    systemProperty 'atmosphereVersion', "${atmosphereVersion}"
+    systemProperty 'commonsFileuploadVersion', "${commonsFileuploadVersion}"
+    systemProperty 'assertjVersion', "${assertjVersion}"
+    systemProperty 'mockitoVersion', "${mockitoVersion}"
+    
+    // fuer Arquillian Graphene
+    systemProperty 'java.util.logging.config.file', "${projectDir}\\src\\test\\resources\\logging.properties"
+    systemProperty 'java.awt.headless', 'true'
+    systemProperty 'webdriver.firefox.bin', "${firefoxBin}"
+    //systemProperty 'webdriver.chrome.driver', "${chromeBin}"
+    
+    minHeapSize '384m'
+    maxHeapSize '1024m'
+    jvmArgs "-Djava.endorsed.dirs=${endorsedDirs}"
+}
+
+processResources {
+    excludes += ['sass',
+                 'sql/mysql',
+                 'sql/oracle',
+                 'sql/postgresql',
+                 'owasp/cve-false-positives.xml',
+                 'enunciate/enunciate.xml']
+}
+
+processTestResources {
+    excludes += ['jboss-deployment-structure.xml',
+                 'hibernate.console.properties',
+                 'https',
+                 'rest',
+                 'logging.properties']
+}
+
+// https://issues.gradle.org/browse/GRADLE-2779
+task deploy(dependsOn: 'assemble', type: JavaExec) {
+    // java -cp %JBOSS_HOME%\jboss-modules.jar ^
+    //      org.jboss.modules.Main ^
+    //      -mp %JBOSS_HOME%\modules org.jboss.as.cli -c command="deploy build/libs/shop.war --force"
+    // Probleme bei Windows mit "
+    //   https://issues.gradle.org/browse/GRADLE-2779
+    //   https://discuss.gradle.org/t/gradle-2779-required-for-deployment-on-jboss-wildfly
+
+    main = 'org.jboss.modules.Main'
+    classpath = files("${System.getenv('JBOSS_HOME')}/jboss-modules.jar")
+    args '-mp'
+    args "${System.getenv('JBOSS_HOME')}/modules"
+    args 'org.jboss.as.cli'
+    args '-c'
+    // https://developer.jboss.org/wiki/CLINon-interactiveMode
+    // https://developer.jboss.org/wiki/CLIBatchMode
+    args '--file=deploy.cli'
+}
+
+task undeploy(type: JavaExec) {
+    // java -cp %JBOSS_HOME%\jboss-modules.jar ^
+    //      org.jboss.modules.Main ^
+    //      -mp %JBOSS_HOME%\modules org.jboss.as.cli -c command="undeploy shop.war"
+
+    main = 'org.jboss.modules.Main'
+    classpath = files("${System.getenv('JBOSS_HOME')}/jboss-modules.jar")
+    args '-mp'
+    args "${System.getenv('JBOSS_HOME')}/modules"
+    args 'org.jboss.as.cli'
+    args '-c'
+    args '--file=undeploy.cli'
+}
+
+test {
+    testLogging {
+        // In der Konsole wird STARTED sowie PASSED ausgegeben
+        events 'started', 'passed'
+    }
+}
+
+sonarqube {
+    properties {
+        property 'sonar.exclusions', '**/UAgentInfo.java,**/*min.js,**/api-docs/**/*.js,**/api-docs/css/*.css'
+        property 'sonar.scm.disabled', true
+    }
+}
+
+// http://randomthoughtsonjavaprogramming.blogspot.de/2012/02/plantuml-and-netbeans.html
+task plantuml << {
+    ant.taskdef(name: 'plantuml',
+                classname: 'net.sourceforge.plantuml.ant.PlantUmlTask',
+                classpath: configurations.plantuml.asPath)
+
+    ant.mkdir(dir: "${buildDir}/docs/images")
+
+    ant.plantuml(output: "${buildDir}/docs/images",
+                 graphvizDot: 'C:\\Zimmermann\\Graphviz\\bin\\dot.exe',
+                 verbose: 'true') {
+        fileset(dir: "${projectDir}/src/main/java") {
+            include(name: '**/*.java')
+        }
+    }
+}
+
+javadoc {
+    configure(options) {
+        memberLevel = org.gradle.external.javadoc.JavadocMemberLevel.PRIVATE
+        author = "true"
+        use = "true"
+        bottom = "Copyright &copy; 2009 - ${currentYear} J&uuml;rgen Zimmermann, Hochschule Karlsruhe - Informatik und Wirtschaftsinformatik. All Rights Reserved."
+    }
+    // http://plantuml.sourceforge.net/qa/?qa=3691/gradles-javadoc-task-stops-working-when-using-plantuml
+    // http://blog.joda.org/2014/02/turning-off-doclint-in-jdk-8-javadoc.html
+    options.addStringOption('Xdoclint:none', '-quiet')
+    
+    doLast() {
+        logger.info "Javadoc im Verzeichnis \"${buildDir}/docs/javadoc\" erstellt"
+    }
+}
+javadoc.dependsOn plantuml
+
+asciidoctor {
+    sourceDir 'src/main/docs'
+    outputDir "${buildDir}/docs/asciidoc"
+    backends 'html5' //, 'pdf'
+    logDocuments true
+    attributes 'encoding': 'iso-8859-1'
+    // fuer PDF (noch im Alpha-Stadium!): imagesdir relativ zu sourceDir.
+    // Dann funktioniert aber die Referenzierung der Bilder in HTML nicht mehr :-(
+    // https://github.com/asciidoctor/asciidoctor-pdf/issues/271
+    // https://github.com/asciidoctor/asciidoctor-epub3/issues/22
+    //attributes imagesdir: "../../../build/docs/images"
+}
+asciidoctor.dependsOn plantuml
+
+dependencyCheck {
+    proxyServer = System.properties['http.proxyHost']
+    proxyPort = Integer.getInteger('http.proxyPort')
+    proxyUsername = System.properties['http.proxyUser']
+    proxyPassword = System.properties['http.proxyPassword']
+
+    //logFile ${buildDir}/owasp-dependency-check.log
+    //autoUpdate ${owaspAutoUpdate}
+    //suppressionFile ${projectDir}/src/main/resources/cve-false-positives.xml
+}
+
+// https://github.com/stoicflame/enunciate/issues/108
+// https://github.com/stoicflame/enunciate/issues/107
+task enunciate << {
+    ant.taskdef(name: 'enunciateTask',
+                classname: 'com.webcohesion.enunciate.EnunciateTask',
+                classpath: configurations.enunciate.asPath)
+
+    ant.mkdir(dir: "${buildDir}/docs/enunciate")
+    
+    ant.enunciateTask(basedir: 'src/main/java',
+                      buildDir: "${buildDir}/enunciate",
+                      configFile: 'src/main/resources/enunciate/enunciate.xml',
+                      javacSourceVersion: "${javaVersion}",
+                      javacTargetVersion: "${javaVersion}") {
+        include(name: '**/*.java')
+        export(artifactId: 'docs', destination: "${buildDir}/docs/enunciate")
+        classpath {
+            pathelement(path: sourceSets.main.runtimeClasspath.asPath)
+            pathelement(path: configurations.enunciate.asPath)
+        }
+    }
+}
+
+// http://jeremylong.github.io/DependencyCheck/dependency-check-ant
+// http://jeremylong.github.io/DependencyCheck/dependency-check-ant/configuration.html
+// https://github.com/jeremylong/DependencyCheck/issues/360
+task checkDeps << {
+    ant.taskdef(resource: 'dependency-check-taskdefs.properties',
+                // name: 'dependency-check',
+                // classname: 'org.owasp.dependencycheck.taskdefs.Check',
+                classpath: configurations.depCheck.asPath)
+
+    ant.'dependency-check'(autoupdate: "${owaspAutoUpdate}",
+                           suppressionfile: "${projectDir}/src/main/resources/owasp/cve-false-positives.xml",
+                           // ab H2 1.4:
+                           // * MVStore
+                           //   http://www.h2database.com/html/mvstore.html
+                           // * "native file system lock" fuer die DB-Datei (statt zusaetzl. Lock-Datei)
+                           //   http://www.h2database.com/html/advanced.html#file_locking_protocols
+                           //connectionString: 'jdbc:h2:file:C:/Zimmermann/owasp-dependency-check/dc;FILE_LOCK=FS;AUTOCOMMIT=ON',
+                           //databaseUser: 'dc',
+                           //databasePassword: 'DC-Pass1337!',
+                           dataDirectory: 'C:/Zimmermann/owasp-dependency-check',
+                           databaseDriverPath: 'C:/Zimmermann/maven-repository/com/h2database/h2/1.3.176/h2-1.3.176.jar',
+                           reportoutputdirectory: "${buildDir}",
+                           reportformat: 'ALL') {
+                           //proxyserver: System.properties['http.proxyHost'],
+                           //proxyport: Integer.getInteger('http.proxyPort'),
+                           //proxyusername: System.properties['http.proxyUser'],
+                           //proxypassword: System.properties['http.proxyPassword']) {
+        path {
+            pathelement(path: sourceSets.main.runtimeClasspath.asPath)
+        }
+    }
+    
+    ant.echo("dependency-check-report.html im Verzeichnis \"${buildDir}\" erstellt")
+}
+
+task checkDeps130 << {
+    ant.taskdef(name: 'checkDeps',
+                classname: 'org.owasp.dependencycheck.taskdefs.DependencyCheckTask',
+                classpath: configurations.depCheck130.asPath)
+    ant.checkDeps(autoupdate: "${owaspAutoUpdate}",
+                  suppressionfile: "${projectDir}/src/main/resources/owasp/cve-false-positives.xml",
+                  dataDirectory: 'C:/Zimmermann/owasp-dependency-check',
+                  reportoutputdirectory: "${buildDir}",
+                  reportformat: 'ALL',
+                  proxyserver: System.properties['http.proxyHost'],
+                  proxyport: Integer.getInteger('http.proxyPort'),
+                  proxyusername: System.properties['http.proxyUser'],
+                  proxypassword: System.properties['http.proxyPassword']) {
+        path {
+            pathelement(path: sourceSets.main.runtimeClasspath.asPath)
+        }
+    }
+}
+
+// -----------------------------------------
+// Generierung der Client-Stubs fuer SOAP
+// -----------------------------------------
+task gensoapRegistrierung(type: JavaExec) {
+    // http://cxf.apache.org/docs/wsdl-to-java.html
+    main = 'org.apache.cxf.tools.wsdlto.WSDLToJava'
+    classpath = configurations.gensoapClient
+    args '-verbose'
+    args '-client'
+    args '-d'
+    args 'src/test/java'
+    args '-p', 'de.shop.registrierung.soap.gen'
+    args "${System.getenv('JBOSS_HOME')}/standalone/data/wsdl/shop.war/RegistrierungSoapService.wsdl"
+}
+task gensoapKundenverwaltung(type: JavaExec) {
+    main = 'org.apache.cxf.tools.wsdlto.WSDLToJava'
+    classpath = configurations.gensoapClient
+    args '-verbose'
+    args '-client'
+    args '-d'
+    args 'src/test/java'
+    args '-p'
+    args 'de.shop.kundenverwaltung.soap.gen'
+    args "${System.getenv('JBOSS_HOME')}/standalone/data/wsdl/shop.war/KundenSoapService.wsdl"
+}
+
+task gensoapClient {
+}
+gensoapClient.dependsOn {
+    tasks.findAll { task -> task.name.startsWith('gensoap') && !task.name.equals('gensoapClient') }
+}
+
+// nur fuer "Software Engineering"
+task verschluesseln(type: JavaExec) {
+    main = 'de.shop.util.security.Verschluesseln'
+    // https://docs.gradle.org/current/userguide/working_with_files.html
+    classpath = files('build/classes/main')
+    // siehe gradle.properties
+    args "${password}"
+    args "${messageDigest}"
+}
+
+// https://docs.gradle.org/current/userguide/maven_plugin.html
+task pom {
+    pom {
+        project {
+            repositories {
+                repository {
+                    id 'jcenter'
+                    name 'jcenter Maven Repository'
+                    url 'https://jcenter.bintray.com'
+                }
+                repository {
+                    id 'jboss'
+                    name 'JBoss Maven 2 Repository'
+                    url "${jbossRepository}"
+                }
+                repository {
+                    id 'primefaces'
+                    name 'PrimeFaces Maven Repository'
+                    url "${primefacesRepository}"
+                }
+            }
+            pluginRepositories {
+                pluginRepository {
+                    id 'jcenter'
+                    name 'jcenter Maven Repository'
+                    url 'https://jcenter.bintray.com'
+                }
+                pluginRepository {
+                    id 'jboss'
+                    name 'JBoss Maven 2 Repository'
+                    url "${jbossRepository}"
+                }
+            }
+
+            dependencyManagement {
+                dependencies {
+                    dependency {
+                        groupId 'org.jboss.shrinkwrap.resolver'
+                        artifactId 'shrinkwrap-resolver-bom'
+                        version "${shrinkwrapResolverVersion}"
+                        type 'pom'
+                        scope 'import'
+                    }
+                    dependency {
+                        groupId 'org.jboss.shrinkwrap'
+                        artifactId 'shrinkwrap-bom'
+                        version "${shrinkwrapVersion}"
+                        type 'pom'
+                        scope 'import'
+                    }
+                    dependency {
+                        groupId 'org.jboss.arquillian'
+                        artifactId 'arquillian-bom'
+                        version "${arquillianBomVersion}"
+                        type 'pom'
+                        scope 'import'
+                    }
+                    dependency {
+                        groupId 'org.jboss.resteasy'
+                        artifactId 'resteasy-bom'
+                        version "${resteasyBomVersion}"
+                        type 'pom'
+                        scope 'import'
+                    }
+                    dependency {
+                        groupId 'org.wildfly'
+                        artifactId 'wildfly-spec-api'
+                        version "${wildflySpecApiVersion}"
+                        type 'pom'
+                        scope 'import'
+                    }
+                    dependency {
+                        groupId 'org.picketlink'
+                        artifactId 'picketlink-javaee-6.0'
+                        //artifactId 'picketlink-javaee-7.0'
+                        version "${picketlinkVersion}"
+                        type 'pom'
+                        scope 'import'
+                    }
+                    dependency {
+                        groupId 'org.jboss.arquillian.extension'
+                        artifactId 'arquillian-drone-bom'
+                        version "${arquillianDroneBomVersion}"
+                        type 'pom'
+                        scope 'import'
+                    }
+                }
+            }
+            
+            dependencies {
+                dependency {
+                    groupId 'org.hibernate'
+                    artifactId 'hibernate-jpamodelgen'
+                    version "${hibernateVersion}"
+                    scope 'provided'
+                }
+            }
+            
+            // project {...} delegiert an eine Instanz von ModelBuilder, das von FactoryBuilderSupport (von Groovy) abgeleitet ist. Dort gibt es bereits eine Methode build
+            // http://stackoverflow.com/questions/27975786/trouble-injecting-the-build-block-while-exporting-a-maven-pom-xml-file-from-grad#answer-27978130
+            //build {
+            //}
+        }
+    }.withXml {
+        asNode()
+        .appendNode('build')
+            .appendNode('plugins').with {
+                appendNode('plugin').with {
+                    appendNode('groupId', 'org.bsc.maven')
+                    appendNode('artifactId', 'maven-processor-plugin')
+                    appendNode('version', '3.1.0-beta1')
+                    appendNode('executions')
+                        .appendNode('execution').with {
+                            appendNode('id', 'generate-metamodel-classes')
+                            appendNode('phase', 'process-sources')
+                            appendNode('goals')
+                                .appendNode('goal', 'process')
+                            appendNode('configuration').with {
+                                appendNode('processors')
+                                   .appendNode('processor', 'org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor')
+                                appendNode('compilerArguments', '-AfullyAnnotationConfigured=true -AaddGenerationDate=true -AaddGeneratedAnnotation=true')
+                                appendNode('excludes').with {
+                                    appendNode('exclude', '**/rest/*.java')
+                                    appendNode('exclude', '**/jsf/*.java')
+                                    appendNode('exclude', '**/jsf/primefaces/*.java')
+                                    appendNode('exclude', '**/soap/*.java')
+                                    appendNode('exclude', '**/PicketLink*.java')
+                                }
+                                appendNode('outputDirectory', '${project.build.directory}/generated-sources/maven-processor-plugin')
+                            }
+                        }
+                }
+                appendNode('plugin').with {
+                    appendNode('groupId', 'org.apache.maven.plugins')
+                    appendNode('artifactId', 'maven-compiler-plugin')
+                    appendNode('version', '3.3')
+                    appendNode('configuration').with {
+                        appendNode('source', '1.8')
+                        appendNode('target', '1.8')
+                        appendNode('showDeprecation', 'true')
+                        appendNode('showWarnings', 'true')
+                        appendNode('encoding', 'ISO-8859-1')
+                        appendNode('compilerArgs').with {
+                            appendNode('arg', '-proc:none')
+                            appendNode('arg', '-parameters')
+                            appendNode('arg', '-Xlint:all')
+                            appendNode('arg', '-Xdiags:verbose')
+                        }
+                    }
+                }
+            }
+    }.writeTo("${buildDir}/maven/pom.xml")
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = "${gradleVersion}"
+}
