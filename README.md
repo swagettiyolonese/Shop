@@ -20,16 +20,23 @@ Es fehlen nun folgende Ordner bzw. Dateien (mittels .gitignore sind die festgele
 - build\
 - .gradle
 - .nb-gradle
-- gradle.properties // Diese Datei könnt ihr aus den ursprünglichen Zimmermann-Dateien ziehen, die brauchen wir wegen dem test-Task in der build.gradle
 
 Diese Dateien werden mit den folgenden Befehlen angelegt:<br>
 
 <h3>3) Mit Gradle aktuellen Stand bauen</h3>
 
-2.1) Im Verzeichnis das cmd öffnen<br>
-2.2) gradlew clean // Gradle löscht mit diesem Befehl potentiell vorhandene Unterordner (und zieht die Dependencies wobei ich nicht verstehe warum^^)<br>
-2.3) gradlew compileTestJava // Gradle zieht mit diesem Befehl die Dependencies und erstellt die .jars<br>
+3.1) Im Verzeichnis das cmd öffnen<br>
+3.2) gradlew clean // Gradle löscht mit diesem Befehl potentiell vorhandene Unterordner (und zieht die Dependencies wobei ich nicht verstehe warum^^)<br>
+3.3) gradlew compileTestJava // Gradle zieht mit diesem Befehl die Dependencies und erstellt die .jars<br>
 
+<h3>4) Wichtige Git-Statements noch durchführen</h3>
+
+4.1) Das cmd im Projektverzeichnis öffnen und folgende drei Befehle UNBEDINGT eingeben
+- git update-index --assume-unchanged .nb-gradle-properties
+- git update-index --assume-unchanged build.xml
+- git update-index --assume-unchanged gradle.properties
+ 
+Mit diesen Befehlen werden die drei genannten Dateien bei lokaler Änderung NICHT getracked und können somit personalisiert werden, falls nötig (Müsst ihr schauen, ob die Pfade in den Dateien passen). Falls sie doch getracked werden, dann NICHT commiten, sondern einfach ignorieren.
 
 <h3>Weiter...</h3>
 
