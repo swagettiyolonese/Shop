@@ -30,15 +30,23 @@ import javax.ws.rs.core.UriInfo;
 @ApplicationScoped
 public class UriHelper {
     public URI getUri(Class<?> clazz, UriInfo uriInfo) {
-        return uriInfo.getBaseUriBuilder()
-                      .path(clazz)
+        return uriInfo.getBaseUriBuilder() // f.e. https://../shop/rest
+                      .path(clazz) // f.e. ../kunden/
                       .build();
     }
 
+    /**
+     * Returns the individual URI of the changed / created attribute
+     * @param clazz resource class
+     * @param method static method of resouce class
+     * @param id id of changed / created attribute
+     * @param uriInfo
+     * @return 
+     */
     public URI getUri(Class<?> clazz, Method method, UUID id, UriInfo uriInfo) {
         return uriInfo.getBaseUriBuilder()
                       .path(clazz)
                       .path(clazz, method.getName())
-                      .build(id);
+                      .build(id); // f.e. ../kunden/{id}
     }
 }
