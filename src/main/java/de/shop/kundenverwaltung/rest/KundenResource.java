@@ -90,6 +90,11 @@ public class KundenResource {
         }
     }
 
+    /**
+     * Important method
+     * 
+     * @return 
+     */
     @GET
     @Produces(APPLICATION_JSON)
     @Path("version")
