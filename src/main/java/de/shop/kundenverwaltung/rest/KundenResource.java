@@ -185,6 +185,12 @@ public class KundenResource {
         kunde.setBestellungenUri(uri);
     }
     
+    /**
+     * returns a set of transtitional links for ONE Kunde
+     * @param kunde
+     * @param uriInfo
+     * @return 
+     */
     public Link[] getTransitionalLinks(AbstractKunde kunde, UriInfo uriInfo) {
         final Link self = Link.fromUri(getUriKunde(kunde, uriInfo))
                               .rel(SELF_LINK)
@@ -205,6 +211,12 @@ public class KundenResource {
         return new Link[] { self, add, update, remove };
     }
     
+    /**
+     * returns a set of transtitional links for a SET of Kunden
+     * @param kunden
+     * @param uriInfo
+     * @return 
+     */
     private Link[] getTransitionalLinksKunden(List<? extends AbstractKunde> kunden, UriInfo uriInfo) {
         if (kunden == null || kunden.isEmpty()) {
             return new Link[0];
