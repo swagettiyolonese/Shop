@@ -90,11 +90,6 @@ public class KundenResource {
         }
     }
 
-    /**
-     * Important method
-     * 
-     * @return 
-     */
     @GET
     @Produces(APPLICATION_JSON)
     @Path("version")
@@ -190,6 +185,12 @@ public class KundenResource {
         kunde.setBestellungenUri(uri);
     }
     
+    /**
+     * returns a set of transtitional links for ONE Kunde
+     * @param kunde
+     * @param uriInfo
+     * @return 
+     */
     public Link[] getTransitionalLinks(AbstractKunde kunde, UriInfo uriInfo) {
         final Link self = Link.fromUri(getUriKunde(kunde, uriInfo))
                               .rel(SELF_LINK)
