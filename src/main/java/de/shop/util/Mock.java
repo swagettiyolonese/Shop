@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Juergen Zimmermann, Hochschule Karlsruhe
+ * Copyright (C) 2013 - 2015 Juergen Zimmermann, Hochschule Karlsruhe
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,7 +42,7 @@ import static java.util.UUID.randomUUID;
  * @author <a href="mailto:Juergen.Zimmermann@HS-Karlsruhe.de">J&uuml;rgen Zimmermann</a>
  */
 public class Mock {
-    private static final int MAX_ID = 999;
+    private static final long MAX_ID = 0xFFF_000_000_000L;
     private static final int MAX_KUNDEN = 8;
     private static final int MAX_BESTELLUNGEN = 4;
 
@@ -52,7 +52,8 @@ public class Mock {
     
     private Optional<AbstractKunde> findKundeById(UUID id, boolean checkId) {
         final String idStr = id.toString();
-        final int tmp = Integer.decode("0x" + idStr.substring(idStr.length() - 1));
+        // Take only the last 12 hex ziffern (2 stupid 2 translate)
+        final long tmp = Long.decode("0x" + idStr.substring(idStr.length() - 12));
         if (checkId && tmp > MAX_ID) {
             return empty();
         }
@@ -71,6 +72,7 @@ public class Mock {
         kunde.setNachname("Nachname" + id);
         kunde.setEmail("" + id + "@hska.de");
         
+        // adress needs an id
         saveAdresse(randomUUID(), kunde);
         
         if (kunde.getClass().equals(Privatkunde.class)) {

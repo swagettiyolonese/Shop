@@ -17,6 +17,7 @@
 
 package de.shop.util.rest;
 
+import de.shop.kundenverwaltung.rest.KundenResource;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.util.UUID;
@@ -34,6 +35,7 @@ public class UriHelper {
                       .path(clazz) // f.e. ../kunden/
                       .build();
     }
+    
 
     /**
      * Returns the individual URI of the changed / created attribute

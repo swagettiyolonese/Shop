@@ -46,3 +46,5 @@ Damit wir hier zusammen gut arbeiten können, ist es wichtig, dass jeder weiß u
 
 Bin selber kein krasser Experte, aber die Basics hab ich drauf. Also ruhig fragen, wenns was gibt.
 
+<h3>Server starten etc.</h3>
+Nach Serverstart, Bauen und Deployen der Shop.war, ist der Server unter https://localhost:8443/shop/rest/xxx erreichbar

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Juergen Zimmermann, Hochschule Karlsruhe
+ * Copyright (C) 2013 - 2015 Juergen Zimmermann, Hochschule Karlsruhe
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -70,7 +70,7 @@ public class KundenResourceTest extends AbstractResourceTest {
     private static final Logger LOGGER = Logger.getLogger(MethodHandles.lookup().lookupClass().getName());
     
     private static final UUID KUNDE_ID = fromString("00000001-0000-0000-0000-000000000001");
-    private static final UUID KUNDE_ID_NICHT_VORHANDEN = fromString("00000001-0000-0000-0000-999999999999");
+    private static final UUID KUNDE_ID_NICHT_VORHANDEN = fromString("00000001-0000-0000-0000-FFFFFFFFFFFF");
     private static final UUID KUNDE_ID_UPDATE = fromString("00000001-0000-0000-0000-000000000002");
     private static final UUID KUNDE_ID_DELETE = fromString("00000001-0000-0000-0000-000000000005");
     private static final String NACHNAME = "Alpha";
