@@ -58,12 +58,6 @@ public class Artikel { // TODO: Validate bean validation
           message = "{artikel.artikelBeschreibung.length}")
     private String artikelBeschreibung;
     
-    @XmlTransient
-    @JsonIgnore
-    private Bestellung bestellung;
-    
-    private URI bestellungURI;
-    
     /**
      * @return the id
      */
@@ -127,34 +121,6 @@ public class Artikel { // TODO: Validate bean validation
         this.artikelBeschreibung = artikelBeschreibung;
     }
 
-    /**
-     * @return the bestellung
-     */
-    public Bestellung getBestellung() {
-        return bestellung;
-    }
-
-    /**
-     * @param bestellung the bestellung to set
-     */
-    public void setBestellung(Bestellung bestellung) {
-        this.bestellung = bestellung;
-    }
-
-    /**
-     * @return the bestellungURI
-     */
-    public URI getBestellungURI() {
-        return bestellungURI;
-    }
-
-    /**
-     * @param bestellungURI the bestellungURI to set
-     */
-    public void setBestellungURI(URI bestellungURI) {
-        this.bestellungURI = bestellungURI;
-    }
-
     @Override
     public int hashCode() {
         final int prime = HASH_PRIME;
@@ -179,7 +145,6 @@ public class Artikel { // TODO: Validate bean validation
                 ", artikelname=" + artikelName + //
                 ", lagerbestand=" + lagerBestand + //
                 ", preis=" + preis + //
-                ", artikelbeschreibung=" + artikelBeschreibung + //
-                ", bestellungURI=" + bestellungURI + '}';
+                ", artikelbeschreibung=" + artikelBeschreibung + '}';
     }
 }
