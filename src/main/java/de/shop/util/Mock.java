@@ -23,6 +23,7 @@ import de.shop.kundenverwaltung.domain.Adresse;
 import de.shop.kundenverwaltung.domain.Firmenkunde;
 import de.shop.kundenverwaltung.domain.HobbyType;
 import de.shop.kundenverwaltung.domain.Privatkunde;
+import de.shop.warenkorbverwaltung.domain.Warenkorb;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -204,5 +205,37 @@ public class Mock {
 
     public void deleteKunde(UUID kundeId) {
         out.println("Kunde mit ID=" + kundeId + " geloescht");   //NOSONAR
+    }
+
+    public Optional<Warenkorb> findWarenkorbByKunde(AbstractKunde kunde) {
+        // Beziehungsgeflecht zwischen Kunde und Bestellungen aufbauen:
+        // genau 1 Warenkorb pro Kunde
+        final Warenkorb warenkorb = findWarenkorbById(randomUUID()).get();
+        
+        warenkorb.setKunde(kunde);            
+        
+        kunde.setWarenkorb(warenkorb);
+        
+        return of(warenkorb);
+    }
+    
+    public Optional<Warenkorb> findWarenkorbById(UUID id) {
+        final AbstractKunde kunde = findKundeById(randomUUID(), false).get();
+
+        final Warenkorb warenkorb = new Warenkorb();
+
+        // Das private Attribut "id" setzen, ohne dass es eine set-Methode gibt
+        try {
+            final Field idField = Warenkorb.class.getDeclaredField("id");
+            idField.setAccessible(true);
+            idField.set(warenkorb, id);
+        } catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
+            throw new ShopRuntimeException(e);
+        }
+
+        warenkorb.setValue(0);
+        warenkorb.setKunde(kunde);
+        
+        return of(warenkorb);
     }
 }

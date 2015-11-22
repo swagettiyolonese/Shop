@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import de.shop.bestellverwaltung.domain.Bestellung;
+import de.shop.warenkorbverwaltung.domain.Warenkorb;
 import java.net.URI;
 import java.util.List;
 import java.util.Objects;
@@ -83,6 +84,8 @@ public abstract class AbstractKunde {
     private List<Bestellung> bestellungen;
     
     private URI bestellungenUri;
+    
+    private Warenkorb warenkorb;
 
     public UUID getId() {
         return id;
@@ -126,6 +129,17 @@ public abstract class AbstractKunde {
     
     public void setBestellungenUri(URI bestellungenUri) {
         this.bestellungenUri = bestellungenUri;
+    }
+    
+    public Warenkorb getWarenkorb() {
+        return warenkorb;
+    }
+    
+    public void setWarenkorb(Warenkorb warenkorb) {
+        if(warenkorb == null) {
+            throw new NullPointerException();
+        }
+        this.warenkorb = warenkorb;
     }
     
     @Override
