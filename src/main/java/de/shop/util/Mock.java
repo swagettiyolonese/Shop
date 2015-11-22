@@ -17,6 +17,7 @@
 
 package de.shop.util;
 
+import de.shop.artikelverwaltung.domain.Artikel;
 import de.shop.bestellverwaltung.domain.Bestellung;
 import de.shop.kundenverwaltung.domain.AbstractKunde;
 import de.shop.kundenverwaltung.domain.Adresse;
@@ -204,5 +205,65 @@ public class Mock {
 
     public void deleteKunde(UUID kundeId) {
         out.println("Kunde mit ID=" + kundeId + " geloescht");   //NOSONAR
+    }
+    
+    private static void saveBestellung(UUID id, Artikel artikel) {
+        final Bestellung bestellung = new Bestellung();
+        // Das private Attribut "id" setzen, ohne dass es eine set-Methode gibt
+        try {
+            final Field idField = Bestellung.class.getDeclaredField("id");
+            idField.setAccessible(true);
+            idField.set(bestellung, id);
+        } catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
+            throw new ShopRuntimeException(e);
+        }
+
+        bestellung.setAusgeliefert(false);
+
+        // HIER EINSETZEN
+        
+        bestellung.setKunde(kunde);
+        kunde.setAdresse(adresse);
+    }
+    
+    public Optional<Artikel> findArtikelById(UUID artikelId) {
+        final String idStr = artikelId.toString();
+        // Take only the last 12 hex ziffern (2 stupid 2 translate)
+        final long tmp = Long.decode("0x" + idStr.substring(idStr.length() - 12));
+        if (tmp > MAX_ID) {
+            return empty();
+        }
+        
+        final Artikel artikel = new Artikel();
+        
+        // Das private Attribut "id" setzen, ohne dass es eine set-Methode gibt
+        try {
+            final Field idField = Artikel.class.getDeclaredField("id");
+            idField.setAccessible(true);
+            idField.set(artikel, artikelId);
+        } catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
+            throw new ShopRuntimeException(e);
+        }
+        
+        artikel.setArtikelName("Samsumg Galaxy S3");
+        artikel.setLagerBestand(100);
+        artikel.setPreis((float)399.99);
+              // HIER EINSETZEN
+        // adress needs an id
+        saveBestellung(randomUUID(), artikel);
+        
+        if (kunde.getClass().equals(Privatkunde.class)) {
+            final Privatkunde privatkunde = (Privatkunde) kunde;
+            final Set<HobbyType> hobbies = new HashSet<>();
+            hobbies.add(HobbyType.LESEN);
+            hobbies.add(HobbyType.REISEN);
+            privatkunde.setHobbies(hobbies);
+        }
+        
+        return of(kunde);
+    }
+    
+    public Optional<List<Artikel>> findArtikelByBestellung(UUID bestellungId) {
+        return null;
     }
 }

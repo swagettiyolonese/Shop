@@ -11,6 +11,10 @@ import de.shop.kundenverwaltung.domain.AbstractKunde;
 import java.net.URI;
 import java.util.Objects;
 import java.util.UUID;
+import javax.validation.constraints.Digits;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlTransient;
 
 import static de.shop.util.Constants.HASH_PRIME;
@@ -19,12 +23,39 @@ import static de.shop.util.Constants.HASH_PRIME;
  * This is the domain class of an article. An order needs to implement at least one article.
  * @author Jan
  */
-public class Artikel { // TODO: Add bean validation!
+public class Artikel { // TODO: Validate bean validation
+    
+    private static final int ARTIKELNAME_LENGTH_MIN = 2;
+    private static final int ARTIKELNAME_LENGTH_MAX = 32;
+    
+    private static final int LAGERBESTAND_MAX = 999999;
+    
+    private static final int PREIS_MAX_DIGITS = 6; // Vorkommastellen
+    private static final int PREIS_MAX_FRACTION = 2; // Nachkommastellen
+    
+    private static final int ARTIKELBESCHREIBUNG_LENGTH_MAX = 280;
+    
     private UUID id;
     
+    @NotNull(message = "{artikel.artikelName.notNull}")
+    @Size(min = ARTIKELNAME_LENGTH_MIN, //
+          max = ARTIKELNAME_LENGTH_MAX, //
+          message = "{artikel.artikelName.length}")
     private String artikelName;
+    
+    @NotNull(message = "{artikel.lagerBestand.notNull}")
+    @Max(value = LAGERBESTAND_MAX, //
+         message = "{artikel.lagerBestand.max}")
     private Integer lagerBestand;
+    
+    @NotNull(message = "{artikel.preis.notNull}")
+    @Digits(integer = PREIS_MAX_DIGITS, //
+            fraction = PREIS_MAX_FRACTION, //
+            message = "{artikel.preis.digits}")
     private Float preis;
+    
+    @Size(max = ARTIKELBESCHREIBUNG_LENGTH_MAX, //
+          message = "{artikel.artikelBeschreibung.length}")
     private String artikelBeschreibung;
     
     @XmlTransient
@@ -32,6 +63,13 @@ public class Artikel { // TODO: Add bean validation!
     private Bestellung bestellung;
     
     private URI bestellungURI;
+    
+    /**
+     * @return the id
+     */
+    public UUID getId() {
+        return id;
+    }
 
     /**
      * @return the artikelName

@@ -5,10 +5,159 @@
  */
 package de.shop.artikelverwaltung.rest;
 
+import de.shop.artikelverwaltung.domain.Artikel;
+import de.shop.bestellverwaltung.domain.Bestellung;
+import de.shop.bestellverwaltung.rest.BestellungenResource;
+import de.shop.util.Mock;
+import de.shop.util.ShopRuntimeException;
+import de.shop.util.rest.UriHelper;
+import java.lang.reflect.Method;
+import java.net.URI;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import javax.enterprise.context.RequestScoped;
+import javax.inject.Inject;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.GenericEntity;
+import javax.ws.rs.core.Link;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
+
+import static de.shop.util.Constants.FIRST_LINK;
+import static de.shop.util.Constants.LAST_LINK;
+import static de.shop.util.Constants.SELF_LINK;
+import static de.shop.util.Constants.UUID_PATTERN;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.MediaType.TEXT_XML;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+
 /**
  *
  * @author Jan
  */
+@Path("/artikel")
+@Produces({ APPLICATION_JSON, APPLICATION_XML + ";qs=0.75", TEXT_XML + ";qs=0.5" })
+@Consumes({ APPLICATION_JSON, APPLICATION_XML, TEXT_XML })
+@RequestScoped
 public class ArtikelResource {
+    public static final String ARTIKEL_ID_PATH_PARAM = "id";
+    public static final String BESTELLUNG_ID_PATH_PARAM = "id";
     
+    public static final Method FIND_BY_ID;
+    public static final Method FIND_BY_BESTELLUNG_ID;
+    
+    @Inject
+    private UriHelper uriHelper;
+    
+    private final Mock mock = new Mock();
+
+    static {
+        try {
+            FIND_BY_ID = ArtikelResource.class.getMethod("findById", UUID.class, UriInfo.class);
+            FIND_BY_BESTELLUNG_ID = ArtikelResource.class.getMethod("findByBestellungId", UUID.class, UriInfo.class);
+        } catch (NoSuchMethodException | SecurityException e) {
+            throw new ShopRuntimeException(e);
+        }
+    }
+    
+    @GET
+    @Produces(APPLICATION_JSON)
+    @Path("version")
+    public String getVersion() {
+        return "{version: \"1.0\"}";
+    }
+    
+    @GET
+    @Path("{" + ARTIKEL_ID_PATH_PARAM + ":" + UUID_PATTERN + "}")
+    public Response findById(@PathParam(ARTIKEL_ID_PATH_PARAM) UUID id,
+                             @Context UriInfo uriInfo) {
+        // TODO Anwendungskern statt Mock
+        final Optional<Artikel> artikelOpt = mock.findArtikelById(id);  // TODO: DEFINE METHOD
+        if (!artikelOpt.isPresent()) {
+            return Response.status(NOT_FOUND).build();
+        }
+        
+        final Artikel artikel = artikelOpt.get();
+        setStructuralLinks(artikel, uriInfo);
+        
+        // Link-Header setzen
+        return Response.ok(artikel)
+                       .links(getTransitionalLinks(artikel, uriInfo))
+                       .build();
+    }
+    
+        
+    @GET
+    @Path("bestellung/{" + BESTELLUNG_ID_PATH_PARAM + ":[1-9]\\d*}")
+    public Response findByBestellungId(@PathParam(BESTELLUNG_ID_PATH_PARAM) UUID bestellungID,
+                                  @Context UriInfo uriInfo) {
+        // TODO Anwendungskern statt Mock
+        final Optional<Bestellung> bestellungOpt = mock.findBestellungById(bestellungID);
+        if (!bestellungOpt.isPresent()) {
+            return Response.status(NOT_FOUND).build();
+        }
+        
+        final Bestellung bestellung = bestellungOpt.get();
+        final Optional<List<Artikel>> artikelOpt = mock.findArtikelByBestellung(bestellung); // TODO: ADD METHOD
+        if (!artikelOpt.isPresent()) {
+            return Response.status(NOT_FOUND).build();
+        }
+        
+        final List<Artikel> artikel = artikelOpt.get();
+        // URIs innerhalb der gefundenen Bestellungen anpassen
+        artikel.forEach(a -> setStructuralLinks(a, uriInfo));
+        
+        return Response.ok(new GenericEntity<List<Artikel>>(artikel){})     //NOSONAR
+                       .links(getTransitionalLinks(artikel, uriInfo))
+                       .build();
+    }
+
+    
+    //--------------------------------------------------------------------------
+    // Methoden fuer URIs und Links // HIER ALLES FERTIG
+    //--------------------------------------------------------------------------
+    public URI getUriArtikel(Artikel artikel, UriInfo uriInfo) {
+        return uriHelper.getUri(ArtikelResource.class, FIND_BY_ID, artikel.getId(), uriInfo);
+    }
+    
+    public void setStructuralLinks(Artikel artikel, UriInfo uriInfo) {
+        // URI fuer Bestellung setzen
+        final Bestellung bestellung = artikel.getBestellung();
+        if (bestellung != null) {
+            final URI bestellungURI = uriHelper.getUri(BestellungenResource.class, BestellungenResource.FIND_BY_ID, bestellung.getId(), uriInfo);
+            artikel.setBestellungURI(bestellungURI);
+        }
+    }
+    
+    private Link[] getTransitionalLinks(Artikel artikel, UriInfo uriInfo) {
+        final Link self = Link.fromUri(getUriArtikel(artikel, uriInfo))
+                              .rel(SELF_LINK)
+                              .build();
+        return new Link[] { self };
+    }
+    
+        
+    private Link[] getTransitionalLinks(List<Artikel> artikel, UriInfo uriInfo) {
+        if (artikel == null || artikel.isEmpty()) {
+            return new Link[0];
+        }
+   
+        final Link first = Link.fromUri(getUriArtikel(artikel.get(0), uriInfo))
+                               .rel(FIRST_LINK)
+                               .build();
+        final int lastPos = artikel.size() - 1;
+        
+        final Link last = Link.fromUri(getUriArtikel(artikel.get(lastPos), uriInfo))
+                              .rel(LAST_LINK)
+                              .build();
+        
+        return new Link[] { first, last };
+    }
 }
