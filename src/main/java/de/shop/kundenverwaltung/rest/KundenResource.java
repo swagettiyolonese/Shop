@@ -144,14 +144,12 @@ public class KundenResource {
                        .build();
     }
     
-    // JBI: Why splitted into two methods?
     @PUT
     public void update(@Valid AbstractKunde kunde) {
         // TODO Anwendungskern statt Mock
         mock.updateKunde(kunde);
     }
 
-    // TODO (JBI): Add Response? Not sure..
     @PUT
     @Path("{id:" + UUID_PATTERN + "}/bestellungen")
     public void update(@PathParam("id") UUID kundeId, @Valid AbstractKunde kunde) {
@@ -160,7 +158,6 @@ public class KundenResource {
         }
     }
     
-    // TODO (JBI): Add Response? Not sure..
     @DELETE
     @Path("{id:" + UUID_PATTERN + "}")
     public void delete(@PathParam("id") UUID kundeId) {
