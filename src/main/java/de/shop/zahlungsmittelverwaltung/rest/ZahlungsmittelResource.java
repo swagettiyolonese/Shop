@@ -50,6 +50,8 @@ import static de.shop.util.Constants.FIRST_LINK;
 import static de.shop.util.Constants.LAST_LINK;
 import static de.shop.util.Constants.SELF_LINK;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+
+
 @Path("/zahlungsmittel")
 @Produces({ APPLICATION_JSON, APPLICATION_XML + ";qs=0.75", TEXT_XML + ";qs=0.5" })
 @Consumes({ APPLICATION_JSON, APPLICATION_XML, TEXT_XML })

@@ -24,6 +24,8 @@ import de.shop.kundenverwaltung.domain.Adresse;
 import de.shop.kundenverwaltung.domain.Firmenkunde;
 import de.shop.kundenverwaltung.domain.HobbyType;
 import de.shop.kundenverwaltung.domain.Privatkunde;
+import de.shop.zahlungsmittelverwaltung.domain.AbstractZahlungsmittel;
+import de.shop.zahlungsmittelverwaltung.domain.Kreditkarte;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -46,6 +48,7 @@ public class Mock {
     private static final long MAX_ID = 0xFFF_000_000_000L;
     private static final int MAX_KUNDEN = 8;
     private static final int MAX_BESTELLUNGEN = 4;
+    private static final int MAX_ZAHLUNGSMITTEL = 10;
     private static final int MAX_ARTIKEL = 10;
 
     public Optional<AbstractKunde> findKundeById(UUID id) {
@@ -145,7 +148,8 @@ public class Mock {
         
         return of(bestellungen);
     }
-
+    
+    
     public Optional<Bestellung> findBestellungById(UUID id) {
         // andere ID fuer den Kunden
         final AbstractKunde kunde = findKundeById(randomUUID(), false).get();
@@ -207,6 +211,85 @@ public class Mock {
     public void deleteKunde(UUID kundeId) {
         out.println("Kunde mit ID=" + kundeId + " geloescht");   //NOSONAR
     }
+    
+    public Optional<AbstractZahlungsmittel> findZahlungsmittelById(UUID id) {
+        // andere ID fuer den Kunden
+        final AbstractKunde kunde = findKundeById(randomUUID(), false).get();
+
+        final AbstractZahlungsmittel zahlungsmittel = new Kreditkarte();
+
+        // Das private Attribut "id" setzen, ohne dass es eine set-Methode gibt
+        try {
+            final Field idField = AbstractZahlungsmittel.class.getDeclaredField("id");
+            idField.setAccessible(true);
+            idField.set(zahlungsmittel, id);
+        } catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
+            throw new ShopRuntimeException(e);
+        }
+        
+        zahlungsmittel.setKunde(kunde);
+        
+        return of(zahlungsmittel);
+    }
+    
+
+    public AbstractZahlungsmittel saveZahlungsmittel(AbstractZahlungsmittel zahlungsmittel) {
+        // Neue IDs fuer Kunde und zugehoerige Adresse
+        // Ein neuer Kunde hat auch keine Bestellungen
+        // SecureRandom ist eigentlich sicherer, aber auch l0x langsamer (hier: nur Mock-Klasse)
+        final UUID id = randomUUID();
+
+        // Das private Attribut "id" setzen, ohne dass es eine set-Methode gibt
+        try {
+            final Field idField = AbstractZahlungsmittel.class.getDeclaredField("id");
+            idField.setAccessible(true);
+            idField.set(zahlungsmittel, id);
+        } catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
+            throw new ShopRuntimeException(e);
+        }
+
+        final AbstractKunde kunde=  zahlungsmittel.getKunde();
+        // Das private Attribut "id" setzen, ohne dass es eine set-Methode gibt
+        try {
+            final Field idField = AbstractZahlungsmittel.class.getDeclaredField("id");
+            idField.setAccessible(true);
+            idField.set(kunde, randomUUID());
+        } catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
+            throw new ShopRuntimeException(e);
+        }
+        kunde.setZahlungsmittel(zahlungsmittel);
+        
+        out.println("Neues Zahlungsmittel: " + zahlungsmittel);                  //NOSONAR
+        out.println("Für Kunde: " + kunde);               //NOSONAR
+        return zahlungsmittel;
+    }
+
+    public void updateZahlungsmittel(AbstractZahlungsmittel zahlungsmittel) {
+        out.println("Aktualisiertes Zahlungsmittel: " + zahlungsmittel);         //NOSONAR
+    }
+
+    public void deleteZahlungsmittel(UUID zahlungsmittelId) {
+        out.println("Zahlungsmittel mit ID=" + zahlungsmittelId + " geloescht");   //NOSONAR
+    }
+    
+    public Optional<List<AbstractZahlungsmittel>> findZahlungsmittelbyKunde (AbstractKunde kunde){
+        // Beziehungsgeflecht zwischen Kunde und Bestellungen aufbauen:
+        // 1-10 Zahlungsmittel
+        final int anzahl = (int) (kunde.getId().getLeastSignificantBits() % MAX_ZAHLUNGSMITTEL) + 1;
+        final List<AbstractZahlungsmittel> zahlungsmittelList = new ArrayList<>(anzahl);
+        IntStream.rangeClosed(1, anzahl)
+                 .forEach(i -> {
+            final AbstractZahlungsmittel zahlungsmittel = findZahlungsmittelById(randomUUID()).get();
+            zahlungsmittel.setKunde(kunde);
+            zahlungsmittelList.add(zahlungsmittel);            
+        });
+       // kunde.setZahlungsmittel(zahlungsmittelList);
+        
+        
+        return of (zahlungsmittelList);
+        
+    }
+    
     
     public Optional<Artikel> findArtikelById(UUID artikelId) {
         final String idStr = artikelId.toString();

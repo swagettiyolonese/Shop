@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import de.shop.bestellverwaltung.domain.Bestellung;
+import de.shop.zahlungsmittelverwaltung.domain.AbstractZahlungsmittel;
 import java.net.URI;
 import java.util.List;
 import java.util.Objects;
@@ -82,6 +83,9 @@ public abstract class AbstractKunde {
     @XmlTransient
     private List<Bestellung> bestellungen;
     
+    @XmlTransient
+    private List<AbstractZahlungsmittel> zahlungsmittel;
+    
     private URI bestellungenUri;
 
     public UUID getId() {
@@ -119,6 +123,15 @@ public abstract class AbstractKunde {
     public void setBestellungen(List<Bestellung> bestellungen) {
         this.bestellungen = bestellungen;
     }
+
+    public List<AbstractZahlungsmittel> getZahlungsmittel() {
+        return zahlungsmittel;
+    }
+
+    public void setZahlungsmittel(AbstractZahlungsmittel zahlungsmittel) {
+        this.zahlungsmittel.add(zahlungsmittel);
+    }
+    
 
     public URI getBestellungenUri() {
         return bestellungenUri;
