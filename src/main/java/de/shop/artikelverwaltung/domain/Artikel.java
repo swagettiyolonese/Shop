@@ -58,65 +58,38 @@ public class Artikel { // TODO: Validate bean validation
           message = "{artikel.artikelBeschreibung.length}")
     private String artikelBeschreibung;
     
-    /**
-     * @return the id
-     */
     public UUID getId() {
         return id;
     }
 
-    /**
-     * @return the artikelName
-     */
     public String getArtikelName() {
         return artikelName;
     }
 
-    /**
-     * @param artikelName the artikelName to set
-     */
     public void setArtikelName(String artikelName) {
         this.artikelName = artikelName;
     }
 
-    /**
-     * @return the lagerBestand
-     */
     public Integer getLagerBestand() {
         return lagerBestand;
     }
 
-    /**
-     * @param lagerBestand the lagerBestand to set
-     */
     public void setLagerBestand(Integer lagerBestand) {
         this.lagerBestand = lagerBestand;
     }
 
-    /**
-     * @return the preis
-     */
     public Float getPreis() {
         return preis;
     }
 
-    /**
-     * @param preis the preis to set
-     */
     public void setPreis(Float preis) {
         this.preis = preis;
     }
 
-    /**
-     * @return the artikelBeschreibung
-     */
     public String getArtikelBeschreibung() {
         return artikelBeschreibung;
     }
 
-    /**
-     * @param artikelBeschreibung the artikelBeschreibung to set
-     */
     public void setArtikelBeschreibung(String artikelBeschreibung) {
         this.artikelBeschreibung = artikelBeschreibung;
     }
