@@ -21,6 +21,7 @@ import javax.validation.constraints.Pattern;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
 import de.shop.kundenverwaltung.domain.AbstractKunde;
+import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 import javax.validation.Valid;
@@ -74,6 +75,8 @@ public abstract class AbstractZahlungsmittel {
     
     private UUID id;
     
+    private URI kundeUri;
+    
     @XmlTransient
     List <AbstractZahlungsmittel> zahlungsmittel;
 
@@ -106,6 +109,16 @@ public abstract class AbstractZahlungsmittel {
         return id;
     }
 
+    public URI getKundeUri() {
+        return kundeUri;
+    }
+
+    public void setKundeUri(URI kunden) {
+        this.kundeUri = kunden;
+    }
+
+    
+    
     public AbstractKunde getKunde() {
         return kunde;
     }

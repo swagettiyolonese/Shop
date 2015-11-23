@@ -112,7 +112,7 @@ public class ZahlungsmittelResource {
         }
         
         final AbstractKunde kunde = kundeOpt.get();
-        final Optional<List<AbstractZahlungsmittel>> zahlungsmittelOpt = mock.findZahlungsmittelByKunde(kunde);
+        final Optional<List<AbstractZahlungsmittel>> zahlungsmittelOpt = mock.findZahlungsmittelbyKunde(kunde);
         if (!zahlungsmittelOpt.isPresent()) {
             return Response.status(NOT_FOUND).build();
         }
@@ -126,6 +126,11 @@ public class ZahlungsmittelResource {
                        .build();
         
     }
+    
+    
+    //@POST für neues Zahlungsmittel für Kunde X
+    
+    
     
     //--------Methoden für URIs und Links----------
     //---------------------------------------------

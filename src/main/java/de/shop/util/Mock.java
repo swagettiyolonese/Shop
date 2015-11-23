@@ -272,7 +272,7 @@ public class Mock {
         out.println("Zahlungsmittel mit ID=" + zahlungsmittelId + " geloescht");   //NOSONAR
     }
     
-    public Optional<List<AbstractZahlungsmittel>> findZahlungsmittelbyKunde (AbstractKunde kunde){
+    public Optional<List<AbstractZahlungsmittel>> findZahlungsmittelbyKunde(AbstractKunde kunde){
         // Beziehungsgeflecht zwischen Kunde und Bestellungen aufbauen:
         // 1-10 Zahlungsmittel
         final int anzahl = (int) (kunde.getId().getLeastSignificantBits() % MAX_ZAHLUNGSMITTEL) + 1;
