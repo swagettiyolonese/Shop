@@ -22,6 +22,8 @@ import de.shop.kundenverwaltung.domain.AbstractKunde;
 import de.shop.util.Mock;
 import de.shop.util.ShopRuntimeException;
 import de.shop.util.rest.UriHelper;
+import de.shop.warenkorbverwaltung.domain.Warenkorb;
+import de.shop.warenkorbverwaltung.rest.WarenkorbResource;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.util.List;
@@ -71,6 +73,11 @@ import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 public class KundenResource {
     public static final String KUNDEN_ID_PATH_PARAM = "kundeId";
     public static final String KUNDEN_NACHNAME_QUERY_PARAM = "nachname";
+    public static final String WARENKORB_ID_PATH_PARAM = "warenkorbId"; 
+    public static final String KUNDE_ID_PATH_PARAM = "kundeId";
+    
+    public static final Method FIND_WARENKORB_BY_ID;
+    public static final Method FIND_WARENKORB_BY_KUNDE_ID;
     
     public static final Method FIND_BY_ID;
     public static final Method DELETE;
@@ -84,6 +91,9 @@ public class KundenResource {
         try {
             FIND_BY_ID = KundenResource.class.getMethod("findById", UUID.class, UriInfo.class);
             DELETE = KundenResource.class.getMethod("delete", UUID.class);
+            FIND_WARENKORB_BY_ID = WarenkorbResource.class.getMethod("findById", UUID.class, UriInfo.class);
+            FIND_WARENKORB_BY_KUNDE_ID = WarenkorbResource.class.getMethod("findByKundeId", UUID.class, UriInfo.class);
+
                     
         } catch (NoSuchMethodException | SecurityException e) {
             throw new ShopRuntimeException(e);
@@ -134,6 +144,49 @@ public class KundenResource {
                        .links(getTransitionalLinksKunden(kunden, uriInfo))
                        .build();
     }
+    
+    @GET
+    @Path("{" + WARENKORB_ID_PATH_PARAM + ":" + UUID_PATTERN + "}")
+    public Response findWarenkorbById(@PathParam(WARENKORB_ID_PATH_PARAM) UUID id, 
+                             @Context UriInfo uriInfo) {
+        final Optional<Warenkorb> warenkorbOpt = mock.findWarenkorbById(id);
+        if(!warenkorbOpt.isPresent()) {
+            return Response.status(NOT_FOUND).build();
+        }
+        
+        final Warenkorb warenkorb = warenkorbOpt.get();
+        setStructuralLinks(warenkorb, uriInfo);
+        
+        //Link-Header setzen
+        return Response.ok(warenkorb)
+                       .links(getTransitionalLinks(warenkorb, uriInfo))
+                       .build();
+    }
+    
+    @GET
+    @Path("kunde/{" + KUNDE_ID_PATH_PARAM + ":[1-9]\\d*}")
+    public Response findWarenkorbByKundeId(@PathParam(KUNDE_ID_PATH_PARAM) UUID kundeId,
+                                  @Context UriInfo uriInfo) {
+        // TODO Anwendungskern statt Mock
+        final Optional<AbstractKunde> kundeOpt = mock.findKundeById(kundeId);
+        if (!kundeOpt.isPresent()) {
+            return Response.status(NOT_FOUND).build();
+        }
+        
+        final AbstractKunde kunde = kundeOpt.get();
+        final Optional<Warenkorb> warenkorbOpt = mock.findWarenkorbByKunde(kunde);
+        if (!warenkorbOpt.isPresent()) {
+            return Response.status(NOT_FOUND).build();
+        }
+        
+        final Warenkorb warenkorb = warenkorbOpt.get();
+        // URIs innerhalb der gefundenen Bestellungen anpassen
+        setStructuralLinks(warenkorb, uriInfo);
+        
+        return Response.ok(new GenericEntity<Warenkorb>(warenkorb){})     //NOSONAR
+                       .links(getTransitionalLinks(warenkorb, uriInfo))
+                       .build();
+    }
 
     
     @POST
@@ -178,6 +231,26 @@ public class KundenResource {
     private URI getUriBestellungen(AbstractKunde kunde, UriInfo uriInfo) {
         return uriHelper.getUri(BestellungenResource.class, BestellungenResource.FIND_BY_KUNDE_ID, kunde.getId(), uriInfo);
     }        
+
+    public URI getUriWarenkorb(Warenkorb warenkorb, UriInfo uriInfo) {
+        return uriHelper.getUri(WarenkorbResource.class, FIND_BY_ID, warenkorb.getId(), uriInfo);
+    }
+    
+    public void setStructuralLinks(Warenkorb warenkorb, UriInfo uriInfo) {
+        // URI fuer Kunde setzen
+        final AbstractKunde kunde = warenkorb.getKunde();
+        if (kunde != null) {
+            final URI kundeUri = uriHelper.getUri(KundenResource.class, FIND_BY_ID, kunde.getId(), uriInfo);
+            warenkorb.setKundeUri(kundeUri);
+        }
+    }
+    
+    private Link[] getTransitionalLinks(Warenkorb warenkorb, UriInfo uriInfo) {
+        final Link self = Link.fromUri(getUriWarenkorb(warenkorb, uriInfo))
+                              .rel(SELF_LINK)
+                              .build();
+        return new Link[] { self };
+    }
     
     public void setStructuralLinks(AbstractKunde kunde, UriInfo uriInfo) {
         // URI fuer Bestellungen setzen
@@ -186,7 +259,7 @@ public class KundenResource {
     }
     
     /**
-     * returns a set of transtitional links for ONE Kunde
+     * returns a set of transitional links for ONE Kunde
      * @param kunde
      * @param uriInfo
      * @return 

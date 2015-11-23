@@ -85,7 +85,7 @@ public abstract class AbstractKunde {
     
     private URI bestellungenUri;
     
-    private Warenkorb warenkorb;
+    private Warenkorb warenkorbUri;
 
     public UUID getId() {
         return id;
@@ -131,15 +131,15 @@ public abstract class AbstractKunde {
         this.bestellungenUri = bestellungenUri;
     }
     
-    public Warenkorb getWarenkorb() {
-        return warenkorb;
+    public Warenkorb getWarenkorbUri() {
+        return warenkorbUri;
     }
     
-    public void setWarenkorb(Warenkorb warenkorb) {
-        if(warenkorb == null) {
+    public void setWarenkorbUri(Warenkorb warenkorbUri) {
+        if(warenkorbUri == null) {
             throw new NullPointerException();
         }
-        this.warenkorb = warenkorb;
+        this.warenkorbUri = warenkorbUri;
     }
     
     @Override
@@ -162,6 +162,6 @@ public abstract class AbstractKunde {
     @Override
     public String toString() {
         return "AbstractKunde {id=" + id + ", nachname=" + nachname + ", email=" + email
-               + ", bestellungenUri=" + bestellungenUri + '}';
+               + ", bestellungenUri=" + bestellungenUri + ", warenkorbUri=" + warenkorbUri +'}';
     }
 }

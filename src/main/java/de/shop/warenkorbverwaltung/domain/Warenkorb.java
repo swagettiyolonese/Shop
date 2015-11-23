@@ -33,7 +33,7 @@ public class Warenkorb {
     
     private List<Artikel> artikel;
     
-    @NotNull
+    @NotNull(message = "{warenkorb.value.notNull}")
     private int value;    
     
     public UUID getId() {

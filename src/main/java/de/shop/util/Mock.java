@@ -73,6 +73,8 @@ public class Mock {
         kunde.setNachname("Nachname" + id);
         kunde.setEmail("" + id + "@hska.de");
         
+        Optional<Warenkorb> warenkorbOpt = findWarenkorbById(randomUUID());
+                    
         // adress needs an id
         saveAdresse(randomUUID(), kunde);
         
@@ -214,7 +216,7 @@ public class Mock {
         
         warenkorb.setKunde(kunde);            
         
-        kunde.setWarenkorb(warenkorb);
+        kunde.setWarenkorbUri(warenkorb);
         
         return of(warenkorb);
     }

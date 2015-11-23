@@ -17,8 +17,11 @@
 
 package de.shop.kundenverwaltung.domain;
 
+import java.util.Objects;
 import java.util.Set;
 import javax.xml.bind.annotation.XmlRootElement;
+
+import static de.shop.util.Constants.HASH_PRIME;
 
 /**
  * @author <a href="mailto:Juergen.Zimmermann@HS-Karlsruhe.de">J&uuml;rgen Zimmermann</a>
@@ -40,5 +43,23 @@ public class Privatkunde extends AbstractKunde {
     @Override
     public String toString() {
         return "Privatkunde {" + super.toString() + ", hobbies=" + hobbies + '}';
+    }
+    
+    @Override
+    public boolean equals(Object obj) { 
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        Privatkunde other = (Privatkunde) obj;
+        return Objects.equals(hobbies, other.hobbies);
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = HASH_PRIME;
+        return prime + Objects.hashCode(this.hobbies);
     }
 }
