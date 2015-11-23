@@ -46,7 +46,7 @@ public class Mock {
     private static final long MAX_ID = 0xFFF_000_000_000L;
     private static final int MAX_KUNDEN = 8;
     private static final int MAX_BESTELLUNGEN = 4;
-    private static final int MAX_ARTIKEL = 10;
+    private static final int MAX_ARTIKEL = 5;
 
     public Optional<AbstractKunde> findKundeById(UUID id) {
         return findKundeById(id, true);
@@ -163,7 +163,8 @@ public class Mock {
 
         bestellung.setAusgeliefert(false);
         bestellung.setKunde(kunde);
-        
+        bestellung.setArtikel(findAllArtikel().get());
+                
         return of(bestellung);
     }
 
@@ -247,7 +248,17 @@ public class Mock {
     
     // TODO: Add relationship btw. artikel and bestellung
 //    public Optional<List<Artikel>> findArtikelByBestellung(Bestellung bestellung) {
-//        return null;
+//        final int anzahl = (int) (kunde.getId().getLeastSignificantBits() % MAX_BESTELLUNGEN) + 1;
+//        final List<Artikel> bestellungen = new ArrayList<>(anzahl);
+//        IntStream.rangeClosed(1, anzahl)
+//                 .forEach(i -> {
+//            final Bestellung bestellung = findBestellungById(randomUUID()).get();
+//            bestellung.setKunde(kunde);
+//            bestellungen.add(bestellung);            
+//        });
+//        kunde.setBestellungen(bestellungen);
+//        
+//        return of(bestellungen);
 //    }
     
     public void deleteArtikel(UUID artikelId) {

@@ -54,7 +54,7 @@ public class ArtikelResource {
     public static final String BESTELLUNG_ID_PATH_PARAM = "id";
     
     public static final Method FIND_BY_ID;
-    // public static final Method FIND_BY_BESTELLUNG_ID;
+    public static final Method FIND_BY_BESTELLUNG_ID;
     
     @Inject
     private UriHelper uriHelper;
@@ -64,7 +64,7 @@ public class ArtikelResource {
     static {
         try {
             FIND_BY_ID = ArtikelResource.class.getMethod("findById", UUID.class, UriInfo.class);
-            // FIND_BY_BESTELLUNG_ID = ArtikelResource.class.getMethod("findByBestellungId", UUID.class, UriInfo.class);
+            FIND_BY_BESTELLUNG_ID = ArtikelResource.class.getMethod("findByBestellungId", UUID.class, UriInfo.class);
         } catch (NoSuchMethodException | SecurityException e) {
             throw new ShopRuntimeException(e);
         }
@@ -128,16 +128,14 @@ public class ArtikelResource {
     @Path("{id:" + UUID_PATTERN + "}")
     public void delete(UUID artikelId) {
         mock.deleteArtikel(artikelId);
-    }
+    }     
     
-    
-//    /**
-//     * Example: /artikel/bestellungen/ID
-//     * @param bestellungID
-//     * @param artikel
-//     * @param uriInfo
-//     * @return 
-//     */
+    /**
+     * Example: /artikel/bestellungen/ID
+     * @param bestellungID
+     * @param uriInfo
+     * @return 
+     */
 //    @GET
 //    @Path("bestellung/{" + BESTELLUNG_ID_PATH_PARAM + ":[1-9]\\d*}")
 //    public Response findByBestellungId(@PathParam(BESTELLUNG_ID_PATH_PARAM) UUID bestellungID,
@@ -162,6 +160,12 @@ public class ArtikelResource {
 //                       .links(getTransitionalLinks(artikel, uriInfo))
 //                       .build();
 //    }
+    @GET
+    @Path("bestellung/{" + BESTELLUNG_ID_PATH_PARAM + ":[1-9]\\d*}")
+    public Response findByBestellungId(@PathParam(BESTELLUNG_ID_PATH_PARAM) UUID bestellungID,
+                                  @Context UriInfo uriInfo) {
+        return findAll(uriInfo);
+    }
 
     
     //--------------------------------------------------------------------------

@@ -18,8 +18,10 @@
 package de.shop.bestellverwaltung.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import de.shop.artikelverwaltung.domain.Artikel;
 import de.shop.kundenverwaltung.domain.AbstractKunde;
 import java.net.URI;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -37,8 +39,13 @@ public class Bestellung {
     
     @XmlTransient
     @JsonIgnore
+    private List<Artikel> artikel;
+    
+    @XmlTransient
+    @JsonIgnore
     private AbstractKunde kunde;
     
+    private URI artikelUri;
     private URI kundeUri;
     
     public UUID getId() {
@@ -51,6 +58,22 @@ public class Bestellung {
     
     public void setAusgeliefert(boolean ausgeliefert) {
         this.ausgeliefert = ausgeliefert;
+    }
+    
+    public List<Artikel> getArtikel() {
+        return artikel;
+    }
+
+    public void setArtikel(List<Artikel> artikel) {
+        this.artikel = artikel;
+    }
+
+    public URI getArtikelUri() {
+        return artikelUri;
+    }
+
+    public void setArtikelUri(URI artikelUri) {
+        this.artikelUri = artikelUri;
     }
     
     public AbstractKunde getKunde() {
@@ -88,6 +111,10 @@ public class Bestellung {
     
     @Override
     public String toString() {
-        return "Bestellung {id=" + id + ", ausgeliefert=" + ausgeliefert + ", kundeUri=" + kundeUri + '}';
+        return "Bestellung {id=" + id //
+                + ", ausgeliefert=" + ausgeliefert //
+                + ", kundeUri=" + kundeUri //
+                + ", artikelUri=" + artikelUri
+                + '}';
     }
 }

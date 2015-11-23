@@ -17,6 +17,8 @@
 
 package de.shop.bestellverwaltung.rest;
 
+import de.shop.artikelverwaltung.domain.Artikel;
+import de.shop.artikelverwaltung.rest.ArtikelResource;
 import de.shop.bestellverwaltung.domain.Bestellung;
 import de.shop.kundenverwaltung.domain.AbstractKunde;
 import de.shop.kundenverwaltung.rest.KundenResource;
@@ -41,6 +43,7 @@ import javax.ws.rs.core.Link;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
+import static de.shop.kundenverwaltung.rest.KundenResource.FIND_BY_ID;
 import static de.shop.util.Constants.FIRST_LINK;
 import static de.shop.util.Constants.LAST_LINK;
 import static de.shop.util.Constants.SELF_LINK;
@@ -131,13 +134,22 @@ public class BestellungenResource {
         return uriHelper.getUri(BestellungenResource.class, FIND_BY_ID, bestellung.getId(), uriInfo);
     }
     
+    public URI getUriKunde(AbstractKunde kunde, UriInfo uriInfo) {
+        return uriHelper.getUri(KundenResource.class, FIND_BY_ID, kunde.getId(), uriInfo);
+    }
+
+    private URI getUriArtikel(Bestellung bestellung, UriInfo uriInfo) {
+        return uriHelper.getUri(ArtikelResource.class, ArtikelResource.FIND_BY_BESTELLUNG_ID, bestellung.getId(), uriInfo);
+    }        
+    
     public void setStructuralLinks(Bestellung bestellung, UriInfo uriInfo) {
         // URI fuer Kunde setzen
         final AbstractKunde kunde = bestellung.getKunde();
         if (kunde != null) {
-            final URI kundeUri = uriHelper.getUri(KundenResource.class, KundenResource.FIND_BY_ID, kunde.getId(), uriInfo);
+            final URI kundeUri = getUriKunde(kunde, uriInfo);
             bestellung.setKundeUri(kundeUri);
         }
+        bestellung.setArtikelUri(getUriArtikel(bestellung, uriInfo));
     }
     
     private Link[] getTransitionalLinks(Bestellung bestellung, UriInfo uriInfo) {
