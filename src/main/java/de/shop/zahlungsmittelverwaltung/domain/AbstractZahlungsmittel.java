@@ -22,6 +22,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
 import de.shop.kundenverwaltung.domain.AbstractKunde;
 import java.util.List;
+import java.util.UUID;
 import javax.validation.Valid;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
@@ -71,7 +72,7 @@ public abstract class AbstractZahlungsmittel {
     @Future
     private Date ablaufdatum;
     
-    private String id;
+    private UUID id;
     
     @XmlTransient
     List <AbstractZahlungsmittel> zahlungsmittel;
@@ -89,7 +90,7 @@ public abstract class AbstractZahlungsmittel {
         this.ablaufdatum = ablaufdatum;
     }
 
-    public void setId(String id) {
+    public void setId(UUID id) {
         this.id = id;
     }
     
@@ -101,7 +102,7 @@ public abstract class AbstractZahlungsmittel {
         return ablaufdatum;
     }
 
-    public String getId() {
+    public UUID getId() {
         return id;
     }
 
