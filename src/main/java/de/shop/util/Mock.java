@@ -17,6 +17,7 @@
 
 package de.shop.util;
 
+import de.shop.artikelverwaltung.domain.Artikel;
 import de.shop.bestellverwaltung.domain.Bestellung;
 import de.shop.kundenverwaltung.domain.AbstractKunde;
 import de.shop.kundenverwaltung.domain.Adresse;
@@ -46,6 +47,7 @@ public class Mock {
     private static final long MAX_ID = 0xFFF_000_000_000L;
     private static final int MAX_KUNDEN = 8;
     private static final int MAX_BESTELLUNGEN = 4;
+    private static final int MAX_ARTIKEL = 10;
 
     public Optional<AbstractKunde> findKundeById(UUID id) {
         return findKundeById(id, true);
@@ -239,5 +241,51 @@ public class Mock {
         warenkorb.setKunde(kunde);
         
         return of(warenkorb);
+    }
+    
+    public Optional<Artikel> findArtikelById(UUID artikelId) {
+        final String idStr = artikelId.toString();
+        // Take only the last 12 hex digits
+        final long tmp = Long.decode("0x" + idStr.substring(idStr.length() - 12));
+        if (tmp > MAX_ID) {
+            return empty();
+        }
+        
+        final Artikel artikel = new Artikel();
+        
+        // Das private Attribut "id" setzen, ohne dass es eine set-Methode gibt
+        try {
+            final Field idField = Artikel.class.getDeclaredField("id");
+            idField.setAccessible(true);
+            idField.set(artikel, artikelId);
+        } catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
+            throw new ShopRuntimeException(e);
+        }
+        
+        artikel.setArtikelName("Samsung Galaxy S3");
+        artikel.setLagerBestand(100);
+        artikel.setPreis((float)399.99);
+        
+        return of(artikel);
+    }
+    
+    public Optional<List<Artikel>> findAllArtikel() {
+        final int anzahl = MAX_ARTIKEL;
+        final List<Artikel> artikelList = new ArrayList<>(anzahl);
+        IntStream.rangeClosed(1, anzahl)
+                 .forEach(i -> {
+            final Artikel artikel = findArtikelById(randomUUID()).get();
+            artikelList.add(artikel);            
+        });
+        return of(artikelList);
+    }
+    
+    // TODO: Add relationship btw. artikel and bestellung
+//    public Optional<List<Artikel>> findArtikelByBestellung(Bestellung bestellung) {
+//        return null;
+//    }
+    
+    public void deleteArtikel(UUID artikelId) {
+        out.println("Artikel mit ID=" + artikelId + " geloescht");
     }
 }
