@@ -17,27 +17,27 @@ import javax.validation.constraints.Pattern;
  */
 public class Kreditkarte extends AbstractZahlungsmittel {
    
-    @NotNull
+    @NotNull(message = "{gueltigVon.Notnull}")
     Date gueltigVon;
     
-    @NotNull
+    @NotNull(message = "{gueltigBis.Notnull}")
     @Future
     Date gueltigBis;
     
     
     //Nummer
-    @NotNull
+    @NotNull(message = "{kreditkartennummer.Notnull}")
     //Pattern für Kartennummern [xxxx-xxxx-xxxx-xxx]
     @Pattern(regexp = "\\d{16}[0-9]")
     private String kreditkartennummer;
     
     //SecurityCode
-    @NotNull
+    @NotNull(message = "{karteninstitut.Notnull}")
     @Pattern(regexp = "\\d{3}[0-9]")
     private String securitycode;
      
     //Kartentyp (VISA, MC, AMEX usw)
-    @NotNull
+    @NotNull(message = "{securitycode.Notnull}")
     //Als Pattern ein Enum implementieren für VISA, MasterCard, Amex usw
     private String karteninstitut;
     

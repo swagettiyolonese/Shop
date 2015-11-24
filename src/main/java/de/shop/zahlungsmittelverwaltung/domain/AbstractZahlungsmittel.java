@@ -57,19 +57,19 @@ public abstract class AbstractZahlungsmittel {
     public static final String PAYPALZAHLUNG = "PP";
     
     //Besitzer des Zahlungsmittel -> Kann sich vom Kunde unterscheiden
-    @NotNull(message = "{besitzer.name.notnull}")
+    @NotNull(message = "{besitzer.name.notNull}")
     @Min(NACHNAME_LENGTH_MIN)
     @Max(NACHNAME_LENGTH_MAX)            
     @Pattern(regexp=de.shop.kundenverwaltung.domain.AbstractKunde.NACHNAME_PATTERN, message = "{besitzer.name.pattern}")
     private String besitzer;
 
    
-    @NotNull
+    @NotNull(message = "{kunde.notNull}")
     @Valid
     AbstractKunde kunde;
     
     
-    @NotNull(message = "{gültigkeit.ablaufdatum.notnull}")
+    @NotNull(message = "{ablaufdatum.notNull}")
     @Future
     private Date ablaufdatum;
     
