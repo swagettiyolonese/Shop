@@ -17,7 +17,6 @@
 
 package de.shop.util.rest;
 
-import de.shop.kundenverwaltung.rest.KundenResource;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.util.UUID;

@@ -5,10 +5,6 @@
  */
 package de.shop.artikelverwaltung.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import de.shop.bestellverwaltung.domain.Bestellung;
-import de.shop.kundenverwaltung.domain.AbstractKunde;
-import java.net.URI;
 import java.util.Objects;
 import java.util.UUID;
 import javax.validation.constraints.Digits;
@@ -16,16 +12,15 @@ import javax.validation.constraints.Max;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
 
 import static de.shop.util.Constants.HASH_PRIME;
 
 /**
- * This is the domain class of an article. An order needs to implement at least one article.
+ * This is the domain class of an article
  * @author Jan
  */
 @XmlRootElement
-public class Artikel { // TODO: Validate bean validation
+public class Artikel {
     
     private static final int ARTIKELNAME_LENGTH_MIN = 2;
     private static final int ARTIKELNAME_LENGTH_MAX = 32;

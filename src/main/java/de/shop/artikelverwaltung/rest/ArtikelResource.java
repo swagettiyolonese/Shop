@@ -6,8 +6,6 @@
 package de.shop.artikelverwaltung.rest;
 
 import de.shop.artikelverwaltung.domain.Artikel;
-import de.shop.bestellverwaltung.domain.Bestellung;
-import de.shop.bestellverwaltung.rest.BestellungenResource;
 import de.shop.util.Mock;
 import de.shop.util.ShopRuntimeException;
 import de.shop.util.rest.UriHelper;
@@ -22,7 +20,7 @@ import javax.validation.Valid;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -42,7 +40,7 @@ import static javax.ws.rs.core.MediaType.TEXT_XML;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 
 /**
- *
+ * The resource class of Artikel
  * @author Jan
  */
 @Path("/artikel")
@@ -94,7 +92,6 @@ public class ArtikelResource {
         }
         
         final Artikel artikel = artikelOpt.get();
-        // setStructuralLinks(artikel, uriInfo);
         
         // Link-Header setzen
         return Response.ok(artikel)
@@ -115,7 +112,6 @@ public class ArtikelResource {
         }
         
         final List<Artikel> artikel = artikelOpt.get();
-        // setStructuralLinks(artikel, uriInfo);
         
         // Link-Header setzen
         return Response.ok(new GenericEntity<List<Artikel>>(artikel){})
@@ -126,42 +122,23 @@ public class ArtikelResource {
     
     @DELETE
     @Path("{id:" + UUID_PATTERN + "}")
-    public void delete(UUID artikelId) {
+    public void delete(@PathParam("id") UUID artikelId) {
         mock.deleteArtikel(artikelId);
-    }     
+    }
+    
+    @PUT
+    public void update(@Valid Artikel artikel) {
+        mock.updateArtikel(artikel);
+    }
     
     /**
-     * Example: /artikel/bestellungen/ID
+     * Example: /artikel/bestellung/ID
      * @param bestellungID
      * @param uriInfo
      * @return 
-     */
-//    @GET
-//    @Path("bestellung/{" + BESTELLUNG_ID_PATH_PARAM + ":[1-9]\\d*}")
-//    public Response findByBestellungId(@PathParam(BESTELLUNG_ID_PATH_PARAM) UUID bestellungID,
-//                                  @Context UriInfo uriInfo) {
-//        // TODO Anwendungskern statt Mock
-//        final Optional<Bestellung> bestellungOpt = mock.findBestellungById(bestellungID);
-//        if (!bestellungOpt.isPresent()) {
-//            return Response.status(NOT_FOUND).build();
-//        }
-//        
-//        final Bestellung bestellung = bestellungOpt.get();
-//        final Optional<List<Artikel>> artikelOpt = mock.findArtikelByBestellung(bestellung); // TODO: ADD METHOD
-//        if (!artikelOpt.isPresent()) {
-//            return Response.status(NOT_FOUND).build();
-//        }
-//        
-//        final List<Artikel> artikel = artikelOpt.get();
-//        // URIs innerhalb der gefundenen Bestellungen anpassen
-//        // artikel.forEach(a -> setStructuralLinks(a, uriInfo));
-//        
-//        return Response.ok(new GenericEntity<List<Artikel>>(artikel){})     //NOSONAR
-//                       .links(getTransitionalLinks(artikel, uriInfo))
-//                       .build();
-//    }
+     */    
     @GET
-    @Path("bestellung/{" + BESTELLUNG_ID_PATH_PARAM + ":[1-9]\\d*}")
+    @Path("bestellung/{" + BESTELLUNG_ID_PATH_PARAM + ":" + UUID_PATTERN + "}")
     public Response findByBestellungId(@PathParam(BESTELLUNG_ID_PATH_PARAM) UUID bestellungID,
                                   @Context UriInfo uriInfo) {
         return findAll(uriInfo);
@@ -174,16 +151,7 @@ public class ArtikelResource {
     public URI getUriArtikel(Artikel artikel, UriInfo uriInfo) {
         return uriHelper.getUri(ArtikelResource.class, FIND_BY_ID, artikel.getId(), uriInfo);
     }
-    
-//    public void setStructuralLinks(Artikel artikel, UriInfo uriInfo) {
-//        // URI fuer Bestellung setzen
-//        final Bestellung bestellung = artikel.getBestellung();
-//        if (bestellung != null) {
-//            final URI bestellungURI = uriHelper.getUri(BestellungenResource.class, BestellungenResource.FIND_BY_ID, bestellung.getId(), uriInfo);
-//            artikel.setBestellungURI(bestellungURI);
-//        }
-//    }
-    
+        
     private Link[] getTransitionalLinks(Artikel artikel, UriInfo uriInfo) {
         final Link self = Link.fromUri(getUriArtikel(artikel, uriInfo))
                               .rel(SELF_LINK)

@@ -17,7 +17,6 @@
 
 package de.shop.bestellverwaltung.rest;
 
-import de.shop.artikelverwaltung.domain.Artikel;
 import de.shop.artikelverwaltung.rest.ArtikelResource;
 import de.shop.bestellverwaltung.domain.Bestellung;
 import de.shop.kundenverwaltung.domain.AbstractKunde;
@@ -43,7 +42,6 @@ import javax.ws.rs.core.Link;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
-import static de.shop.kundenverwaltung.rest.KundenResource.FIND_BY_ID;
 import static de.shop.util.Constants.FIRST_LINK;
 import static de.shop.util.Constants.LAST_LINK;
 import static de.shop.util.Constants.SELF_LINK;
@@ -99,10 +97,10 @@ public class BestellungenResource {
                        .links(getTransitionalLinks(bestellung, uriInfo))
                        .build();
     }
-    
-        
+     
+//    @Path("kunde/{" + KUNDE_ID_PATH_PARAM + ":[1-9]\\d*}")
     @GET
-    @Path("kunde/{" + KUNDE_ID_PATH_PARAM + ":[1-9]\\d*}")
+    @Path("kunde/{" + KUNDE_ID_PATH_PARAM + ":" + UUID_PATTERN + "}")
     public Response findByKundeId(@PathParam(KUNDE_ID_PATH_PARAM) UUID kundeId,
                                   @Context UriInfo uriInfo) {
         // TODO Anwendungskern statt Mock

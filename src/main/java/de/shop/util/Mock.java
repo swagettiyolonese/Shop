@@ -133,7 +133,7 @@ public class Mock {
     public Optional<List<Bestellung>> findBestellungenByKunde(AbstractKunde kunde) {
         // Beziehungsgeflecht zwischen Kunde und Bestellungen aufbauen:
         // 1, 2, 3 oder 4 Bestellungen
-        final int anzahl = (int) (kunde.getId().getLeastSignificantBits() % MAX_BESTELLUNGEN) + 1;
+        final int anzahl = (int) (kunde.getId().getLeastSignificantBits() % MAX_BESTELLUNGEN) + 4;
         final List<Bestellung> bestellungen = new ArrayList<>(anzahl);
         IntStream.rangeClosed(1, anzahl)
                  .forEach(i -> {
@@ -246,22 +246,11 @@ public class Mock {
         return of(artikelList);
     }
     
-    // TODO: Add relationship btw. artikel and bestellung
-//    public Optional<List<Artikel>> findArtikelByBestellung(Bestellung bestellung) {
-//        final int anzahl = (int) (kunde.getId().getLeastSignificantBits() % MAX_BESTELLUNGEN) + 1;
-//        final List<Artikel> bestellungen = new ArrayList<>(anzahl);
-//        IntStream.rangeClosed(1, anzahl)
-//                 .forEach(i -> {
-//            final Bestellung bestellung = findBestellungById(randomUUID()).get();
-//            bestellung.setKunde(kunde);
-//            bestellungen.add(bestellung);            
-//        });
-//        kunde.setBestellungen(bestellungen);
-//        
-//        return of(bestellungen);
-//    }
-    
     public void deleteArtikel(UUID artikelId) {
-        out.println("Artikel mit ID=" + artikelId + " geloescht");
+        out.println("Artikel mit ID=" + artikelId + " geloescht");         //NOSONAR
+    }
+    
+    public void updateArtikel(Artikel artikel) {
+        out.println("Aktualisierter Artikel: " + artikel);         //NOSONAR
     }
 }
