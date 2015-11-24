@@ -85,8 +85,26 @@ public abstract class AbstractKunde {
     
     private URI bestellungenUri;
     
-    private Warenkorb warenkorbUri;
+    private Warenkorb warenkorb;
 
+    public Warenkorb getWarenkorb() {
+        return warenkorb;
+    }
+
+    public void setWarenkorb(Warenkorb warenkorb) {
+        this.warenkorb = warenkorb;
+    }
+    
+    private URI warenkorbUri;
+    
+    public URI getWarenkorbUri() {
+        return warenkorbUri;
+    }
+    
+    public void setWarenkorbUri(URI warenkorbUri) {
+        this.warenkorbUri = warenkorbUri;
+    }
+    
     public UUID getId() {
         return id;
     }
@@ -131,17 +149,6 @@ public abstract class AbstractKunde {
         this.bestellungenUri = bestellungenUri;
     }
     
-    public Warenkorb getWarenkorbUri() {
-        return warenkorbUri;
-    }
-    
-    public void setWarenkorbUri(Warenkorb warenkorbUri) {
-        if(warenkorbUri == null) {
-            throw new NullPointerException();
-        }
-        this.warenkorbUri = warenkorbUri;
-    }
-    
     @Override
     public int hashCode() {
         return HASH_PRIME + Objects.hashCode(email);
@@ -162,6 +169,6 @@ public abstract class AbstractKunde {
     @Override
     public String toString() {
         return "AbstractKunde {id=" + id + ", nachname=" + nachname + ", email=" + email
-               + ", bestellungenUri=" + bestellungenUri + ", warenkorbUri=" + warenkorbUri +'}';
+               + ", bestellungenUri=" + bestellungenUri +'}';
     }
 }

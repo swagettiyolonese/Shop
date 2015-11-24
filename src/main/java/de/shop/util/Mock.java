@@ -24,8 +24,11 @@ import de.shop.kundenverwaltung.domain.Adresse;
 import de.shop.kundenverwaltung.domain.Firmenkunde;
 import de.shop.kundenverwaltung.domain.HobbyType;
 import de.shop.kundenverwaltung.domain.Privatkunde;
+import de.shop.kundenverwaltung.rest.KundenResource;
+import de.shop.util.rest.UriHelper;
 import de.shop.warenkorbverwaltung.domain.Warenkorb;
 import java.lang.reflect.Field;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -33,7 +36,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.IntStream;
+import javax.inject.Inject;
 
+import static de.shop.bestellverwaltung.rest.BestellungenResource.FIND_BY_ID;
 import static java.lang.System.out;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
@@ -48,6 +53,10 @@ public class Mock {
     private static final int MAX_KUNDEN = 8;
     private static final int MAX_BESTELLUNGEN = 4;
     private static final int MAX_ARTIKEL = 10;
+    private static final int MAX_WARENKORB = MAX_KUNDEN;
+    
+    @Inject
+    private UriHelper uriHelper;
 
     public Optional<AbstractKunde> findKundeById(UUID id) {
         return findKundeById(id, true);
@@ -73,12 +82,13 @@ public class Mock {
         }
         
         kunde.setNachname("Nachname" + id);
-        kunde.setEmail("" + id + "@hska.de");
+        kunde.setEmail("" + id + "@hska.de");        
         
-        Optional<Warenkorb> warenkorbOpt = findWarenkorbById(randomUUID());
-                    
         // adress needs an id
         saveAdresse(randomUUID(), kunde);
+        
+        // warenkorb needs an id
+        saveWarenkorb(randomUUID(), kunde);
         
         if (kunde.getClass().equals(Privatkunde.class)) {
             final Privatkunde privatkunde = (Privatkunde) kunde;
@@ -89,6 +99,23 @@ public class Mock {
         }
         
         return of(kunde);
+    }
+    
+    private static void saveWarenkorb(UUID id, AbstractKunde kunde) {
+        final Warenkorb warenkorb = new Warenkorb();
+        // Das private Attribut "id" setzen, ohne dass es eine set-Methode gibt
+        try {
+            final Field idField = Warenkorb.class.getDeclaredField("id");
+            idField.setAccessible(true);
+            idField.set(warenkorb, id);
+        } catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
+            throw new ShopRuntimeException(e);
+        }
+        
+        //warenkorb.setKunde(kunde);
+        warenkorb.setValue(14);
+        
+        kunde.setWarenkorb(warenkorb);
     }
 
     private static void saveAdresse(UUID id, AbstractKunde kunde) {
@@ -132,7 +159,20 @@ public class Mock {
         return of(kunden);
     }
     
-
+    /*
+    //TEMPORARY
+    public Optional<Warenkorb> findWarenkorbByKunde(AbstractKunde kunde) {
+        // Beziehung zwischen Kunde und Warenkorb aufbauen:
+        // 1 Kunde hat genau einen Warenkorb
+        final Warenkorb warenkorb = findWarenkorbById(randomUUID()).get();
+        warenkorb.setKundeUri(kunde); //KundenUri in Warenkorb setzen, wie bekomme ich die URI des Kunden?
+        
+        kunde.setWarenkorb(warenkorb);
+        
+        return of(warenkorb);
+    }
+    */
+    
     public Optional<List<Bestellung>> findBestellungenByKunde(AbstractKunde kunde) {
         // Beziehungsgeflecht zwischen Kunde und Bestellungen aufbauen:
         // 1, 2, 3 oder 4 Bestellungen
@@ -195,7 +235,20 @@ public class Mock {
             throw new ShopRuntimeException(e);
         }
         adresse.setKunde(kunde);
-
+        
+        final Warenkorb warenkorb = kunde.getWarenkorb();
+        // Das private Attribut "id" setzen, ohne dass es eine set-Methode gibt
+        try {
+            final Field idField = Warenkorb.class.getDeclaredField("id");
+            idField.setAccessible(true);
+            idField.set(warenkorb, randomUUID());
+        } catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
+            throw new ShopRuntimeException(e);
+        }
+//        final URI kundeUri = uriHelper.getUri(KundenResource.class, FIND_BY_ID, kunde.getId(), uriInfo);
+//        warenkorb.setKundeUri(kundeUri);
+        
+        
         kunde.setBestellungen(null);
         
         out.println("Neuer Kunde: " + kunde);                  //NOSONAR
@@ -209,18 +262,6 @@ public class Mock {
 
     public void deleteKunde(UUID kundeId) {
         out.println("Kunde mit ID=" + kundeId + " geloescht");   //NOSONAR
-    }
-
-    public Optional<Warenkorb> findWarenkorbByKunde(AbstractKunde kunde) {
-        // Beziehungsgeflecht zwischen Kunde und Bestellungen aufbauen:
-        // genau 1 Warenkorb pro Kunde
-        final Warenkorb warenkorb = findWarenkorbById(randomUUID()).get();
-        
-        warenkorb.setKunde(kunde);            
-        
-        kunde.setWarenkorbUri(warenkorb);
-        
-        return of(warenkorb);
     }
     
     public Optional<Warenkorb> findWarenkorbById(UUID id) {
@@ -236,12 +277,32 @@ public class Mock {
         } catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
             throw new ShopRuntimeException(e);
         }
-
+                
         warenkorb.setValue(0);
-        warenkorb.setKunde(kunde);
+        
+        Artikel artikel = new Artikel();
+        
+        artikel.setArtikelName("Samsung Galaxy S3");
+        artikel.setLagerBestand(100);
+        artikel.setPreis((float)399.99);
+        
+        warenkorb.addArtikel(artikel);
         
         return of(warenkorb);
     }
+    
+    public Optional<List<Warenkorb>> findAllWarenkorb() {
+        final int anzahl = MAX_WARENKORB;
+        final List<Warenkorb> warenkorbList = new ArrayList<>(anzahl);
+        IntStream.rangeClosed(1, anzahl)
+                 .forEach(i -> {
+            final Warenkorb warenkorb = findWarenkorbById(randomUUID()).get();
+            warenkorbList.add(warenkorb);            
+        });
+        return of(warenkorbList);
+    }
+    
+    
     
     public Optional<Artikel> findArtikelById(UUID artikelId) {
         final String idStr = artikelId.toString();

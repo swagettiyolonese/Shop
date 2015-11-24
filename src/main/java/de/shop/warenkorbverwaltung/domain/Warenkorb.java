@@ -5,16 +5,14 @@
  */
 package de.shop.warenkorbverwaltung.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import de.shop.artikelverwaltung.domain.Artikel;
-import de.shop.kundenverwaltung.domain.AbstractKunde;
 import java.net.URI;
-import java.security.InvalidParameterException;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
-import javax.xml.bind.annotation.XmlTransient;
 
 import static de.shop.util.Constants.HASH_PRIME;
 
@@ -25,31 +23,33 @@ import static de.shop.util.Constants.HASH_PRIME;
 public class Warenkorb {
     private UUID id;
     
-    @XmlTransient
-    @JsonIgnore
-    private AbstractKunde kunde;
+    private final int WARENKORB_MIN_VALUE = 0;
+    private final int WARENKORB_MAX_VALUE = 999;
     
+    @NotNull(message = "{warenkorb.kundeUri.notNull}")
     private URI kundeUri;
     
     private List<Artikel> artikel;
     
+    @Min(value = WARENKORB_MIN_VALUE, message = "{warenkorb.value.min}")
+    @Max(value = WARENKORB_MAX_VALUE, message = "{warenkorb.value.max}")
     @NotNull(message = "{warenkorb.value.notNull}")
     private int value;    
     
+    public List<Artikel> getArtikel() {
+        return artikel;
+    }
+
+    public void setArtikel(List<Artikel> artikel) {
+        this.artikel = artikel;
+    }
+    
+    public void addArtikel(Artikel artikel) {
+        this.artikel.add(artikel);
+    }
+    
     public UUID getId() {
         return id;
-    }
-    
-    public AbstractKunde getKunde() {
-        return kunde;
-    }
-    
-    public void setKunde(AbstractKunde kunde) {
-        if(kunde == null) {
-            throw new NullPointerException();
-        }
-        
-        this.kunde = kunde;
     }
     
     public URI getKundeUri() {
@@ -57,9 +57,6 @@ public class Warenkorb {
     }
     
     public void setKundeUri(URI kundeUri) {
-        if(kundeUri == null) {
-            throw new NullPointerException();
-        }
         this.kundeUri = kundeUri;
     }
     
@@ -68,10 +65,6 @@ public class Warenkorb {
     }
     
     public void setValue(int value) {
-        if(value < 0) {
-            throw new InvalidParameterException();
-        }
-        
         this.value = value;
     }
     
@@ -98,7 +91,7 @@ public class Warenkorb {
     
     @Override
     public String toString() {
-        return "Warenkorb {id=" + id + "}, artikel: [" + artikel.toString() + "], value: " + value + ", kundeUri=" + kundeUri;
+        return "Warenkorb {id=" + id + "}, artikel: [" + artikel.toString() + "], value: " + value;
     }
 }
 

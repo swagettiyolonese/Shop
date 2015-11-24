@@ -17,13 +17,13 @@
 
 package de.shop.kundenverwaltung.rest;
 
+import de.shop.artikelverwaltung.domain.Artikel;
 import de.shop.bestellverwaltung.rest.BestellungenResource;
 import de.shop.kundenverwaltung.domain.AbstractKunde;
 import de.shop.util.Mock;
 import de.shop.util.ShopRuntimeException;
 import de.shop.util.rest.UriHelper;
 import de.shop.warenkorbverwaltung.domain.Warenkorb;
-import de.shop.warenkorbverwaltung.rest.WarenkorbResource;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.util.List;
@@ -57,6 +57,7 @@ import static de.shop.util.Constants.REMOVE_LINK;
 import static de.shop.util.Constants.SELF_LINK;
 import static de.shop.util.Constants.UPDATE_LINK;
 import static de.shop.util.Constants.UUID_PATTERN;
+import static java.util.UUID.randomUUID;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML;
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
@@ -73,11 +74,11 @@ import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 public class KundenResource {
     public static final String KUNDEN_ID_PATH_PARAM = "kundeId";
     public static final String KUNDEN_NACHNAME_QUERY_PARAM = "nachname";
+    
     public static final String WARENKORB_ID_PATH_PARAM = "warenkorbId"; 
     public static final String KUNDE_ID_PATH_PARAM = "kundeId";
-    
+
     public static final Method FIND_WARENKORB_BY_ID;
-    public static final Method FIND_WARENKORB_BY_KUNDE_ID;
     
     public static final Method FIND_BY_ID;
     public static final Method DELETE;
@@ -91,10 +92,8 @@ public class KundenResource {
         try {
             FIND_BY_ID = KundenResource.class.getMethod("findById", UUID.class, UriInfo.class);
             DELETE = KundenResource.class.getMethod("delete", UUID.class);
-            FIND_WARENKORB_BY_ID = WarenkorbResource.class.getMethod("findById", UUID.class, UriInfo.class);
-            FIND_WARENKORB_BY_KUNDE_ID = WarenkorbResource.class.getMethod("findByKundeId", UUID.class, UriInfo.class);
+            FIND_WARENKORB_BY_ID = KundenResource.class.getMethod("findWarenkorbById", UUID.class, UriInfo.class);
 
-                    
         } catch (NoSuchMethodException | SecurityException e) {
             throw new ShopRuntimeException(e);
         }
@@ -149,20 +148,22 @@ public class KundenResource {
     @Path("{" + WARENKORB_ID_PATH_PARAM + ":" + UUID_PATTERN + "}")
     public Response findWarenkorbById(@PathParam(WARENKORB_ID_PATH_PARAM) UUID id, 
                              @Context UriInfo uriInfo) {
-        final Optional<Warenkorb> warenkorbOpt = mock.findWarenkorbById(id);
-        if(!warenkorbOpt.isPresent()) {
+        final Optional<AbstractKunde> kundeOpt = mock.findKundeById(id); // Erstellt einen Kunden
+        if (!kundeOpt.isPresent()) {
             return Response.status(NOT_FOUND).build();
         }
         
-        final Warenkorb warenkorb = warenkorbOpt.get();
-        setStructuralLinks(warenkorb, uriInfo);
+        final AbstractKunde kunde = kundeOpt.get();
+        setStructuralLinks(kunde, uriInfo);
         
         //Link-Header setzen
-        return Response.ok(warenkorb)
-                       .links(getTransitionalLinks(warenkorb, uriInfo))
+        return Response.ok(kunde)
+                       .links(getTransitionalLinks(kunde, uriInfo))
                        .build();
     }
     
+    /*
+    //TEMPORARY
     @GET
     @Path("kunde/{" + KUNDE_ID_PATH_PARAM + ":[1-9]\\d*}")
     public Response findWarenkorbByKundeId(@PathParam(KUNDE_ID_PATH_PARAM) UUID kundeId,
@@ -181,13 +182,13 @@ public class KundenResource {
         
         final Warenkorb warenkorb = warenkorbOpt.get();
         // URIs innerhalb der gefundenen Bestellungen anpassen
-        setStructuralLinks(warenkorb, uriInfo);
+        warenkorb.setStructuralLinks(kunde, uriInfo); //Wie kann ich die Structural Links zu dem Kunden / Warenkorb setzen?
         
         return Response.ok(new GenericEntity<Warenkorb>(warenkorb){})     //NOSONAR
-                       .links(getTransitionalLinks(warenkorb, uriInfo))
+                       .links(getTransitionalLinks(kunde, uriInfo))
                        .build();
     }
-
+    */
     
     @POST
     public Response save(@Valid AbstractKunde kunde, @Context UriInfo uriInfo) {
@@ -233,30 +234,23 @@ public class KundenResource {
     }        
 
     public URI getUriWarenkorb(Warenkorb warenkorb, UriInfo uriInfo) {
-        return uriHelper.getUri(WarenkorbResource.class, FIND_BY_ID, warenkorb.getId(), uriInfo);
-    }
-    
-    public void setStructuralLinks(Warenkorb warenkorb, UriInfo uriInfo) {
-        // URI fuer Kunde setzen
-        final AbstractKunde kunde = warenkorb.getKunde();
-        if (kunde != null) {
-            final URI kundeUri = uriHelper.getUri(KundenResource.class, FIND_BY_ID, kunde.getId(), uriInfo);
-            warenkorb.setKundeUri(kundeUri);
-        }
-    }
-    
-    private Link[] getTransitionalLinks(Warenkorb warenkorb, UriInfo uriInfo) {
-        final Link self = Link.fromUri(getUriWarenkorb(warenkorb, uriInfo))
-                              .rel(SELF_LINK)
-                              .build();
-        return new Link[] { self };
+        return uriHelper.getUri(KundenResource.class, FIND_WARENKORB_BY_ID, warenkorb.getId(), uriInfo);
     }
     
     public void setStructuralLinks(AbstractKunde kunde, UriInfo uriInfo) {
         // URI fuer Bestellungen setzen
         final URI uri = getUriBestellungen(kunde, uriInfo);
+        final Warenkorb warenkorb = kunde.getWarenkorb();
+        
+        if (kunde != null) {
+            final URI kundeUri = uriHelper.getUri(KundenResource.class, FIND_BY_ID, kunde.getId(), uriInfo);
+            warenkorb.setKundeUri(kundeUri);
+        }
         kunde.setBestellungenUri(uri);
+        
+        //warenkorb.addArtikel(new Artikel()); //TEMPORARY
     }
+    
     
     /**
      * returns a set of transitional links for ONE Kunde
