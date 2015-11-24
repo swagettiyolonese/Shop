@@ -28,6 +28,7 @@ import de.shop.zahlungsmittelverwaltung.domain.AbstractZahlungsmittel;
 import de.shop.zahlungsmittelverwaltung.domain.Kreditkarte;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -212,9 +213,9 @@ public class Mock {
         out.println("Kunde mit ID=" + kundeId + " geloescht");   //NOSONAR
     }
     
-    public Optional<AbstractZahlungsmittel> findZahlungsmittelById(UUID id) {
+    public Optional<AbstractZahlungsmittel> findZahlungsmittelById(UUID zahlungsmittelId) {
         // andere ID fuer den Kunden
-        final AbstractKunde kunde = findKundeById(randomUUID(), false).get();
+       /* final AbstractKunde kunde = findKundeById(randomUUID(), false).get();
 
         final AbstractZahlungsmittel zahlungsmittel = new Kreditkarte();
 
@@ -225,13 +226,51 @@ public class Mock {
             idField.set(zahlungsmittel, id);
         } catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
             throw new ShopRuntimeException(e);
+        }*/
+       
+        final String idStr = zahlungsmittelId.toString();
+        // Take only the last 12 hex digits
+        final long tmp = Long.decode("0x" + idStr.substring(idStr.length() - 12));
+        if (tmp > MAX_ID) {
+            return empty();
         }
         
+        final AbstractKunde kunde = findKundeById(randomUUID(), false).get();
+        final Kreditkarte zahlungsmittel = new Kreditkarte();
+        
+        // Das private Attribut "id" setzen, ohne dass es eine set-Methode gibt
+        try {
+            final Field idField = AbstractZahlungsmittel.class.getDeclaredField("id");
+            idField.setAccessible(true);
+            idField.set(zahlungsmittel, zahlungsmittelId);
+        } catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
+            throw new ShopRuntimeException(e);
+        }
+               
         zahlungsmittel.setKunde(kunde);
+        zahlungsmittel.setBesitzer(kunde.getNachname());
+        zahlungsmittel.setAblaufdatum(new Date(2018));
+        zahlungsmittel.setKreditkartennummer("4444-0815-4711-2142");
+        zahlungsmittel.setSecuritycode("170");
+        zahlungsmittel.setKarteninstitut("Deutsche Landsbank Berlin");
+        
+        
         
         return of(zahlungsmittel);
     }
     
+    // /*
+    public Optional<List<AbstractZahlungsmittel>> findAllZahlungsmittel() {
+        final int anzahl = MAX_ZAHLUNGSMITTEL;
+        final List<AbstractZahlungsmittel> zahlungsmittelList = new ArrayList<>(anzahl);
+        IntStream.rangeClosed(1, anzahl)
+                 .forEach(i -> {
+            final AbstractZahlungsmittel zahlungsmittel = findZahlungsmittelById(randomUUID()).get();
+            zahlungsmittelList.add(zahlungsmittel);            
+        });
+        return of(zahlungsmittelList);
+    //*/
+    }
 
     public AbstractZahlungsmittel saveZahlungsmittel(AbstractZahlungsmittel zahlungsmittel) {
         // Neue IDs fuer Kunde und zugehoerige Adresse
@@ -264,8 +303,8 @@ public class Mock {
         return zahlungsmittel;
     }
 
-    public void updateZahlungsmittel(AbstractZahlungsmittel zahlungsmittel) {
-        out.println("Aktualisiertes Zahlungsmittel: " + zahlungsmittel);         //NOSONAR
+    public void updateZahlungsmittel(UUID zahlungsmittelId) {
+        out.println("Aktualisiertes Zahlungsmittel: " + zahlungsmittelId);         //NOSONAR
     }
 
     public void deleteZahlungsmittel(UUID zahlungsmittelId) {

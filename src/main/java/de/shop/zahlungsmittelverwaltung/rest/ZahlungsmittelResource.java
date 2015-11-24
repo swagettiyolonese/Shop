@@ -26,7 +26,10 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
-import static de.shop.bestellverwaltung.rest.BestellungenResource.BESTELLUNGEN_ID_PATH_PARAM;
+import static de.shop.util.Constants.FIRST_LINK;
+import static de.shop.util.Constants.LAST_LINK;
+import static de.shop.util.Constants.SELF_LINK;
+import static de.shop.util.Constants.UUID_PATTERN;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML;
 import static javax.ws.rs.core.MediaType.TEXT_XML;
@@ -40,15 +43,20 @@ import static javax.ws.rs.core.Response.Status.NOT_FOUND;
  */
 
 import de.shop.zahlungsmittelverwaltung.domain.AbstractZahlungsmittel;
+import de.shop.zahlungsmittelverwaltung.domain.Kreditkarte;
 import java.net.URI;
 import java.util.List;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.PUT;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.Link;
+import org.hibernate.annotations.UpdateTimestamp;
 
-import static de.shop.bestellverwaltung.rest.BestellungenResource.FIND_BY_ID;
+import static de.shop.kundenverwaltung.rest.KundenResource.DELETE;
 import static de.shop.util.Constants.FIRST_LINK;
 import static de.shop.util.Constants.LAST_LINK;
 import static de.shop.util.Constants.SELF_LINK;
+import static javax.accessibility.AccessibleTableModelChange.UPDATE;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 
 
@@ -62,7 +70,7 @@ public class ZahlungsmittelResource {
     public static final String KUNDE_ID_PATH_PARAM = "id";
     
     public static final Method FIND_BY_ID;
-    public static final Method FIND_BY_KUNDE_ID;
+    //public static final Method FIND_BY_KUNDE_ID;
     
     @Inject
     private UriHelper uriHelper;
@@ -72,16 +80,23 @@ public class ZahlungsmittelResource {
     static {
         try {
             FIND_BY_ID = ZahlungsmittelResource.class.getMethod("findById", UUID.class, UriInfo.class);
-            FIND_BY_KUNDE_ID = ZahlungsmittelResource.class.getMethod("findByKundeId", UUID.class, UriInfo.class);
+            //FIND_BY_KUNDE_ID = ZahlungsmittelResource.class.getMethod("findByKundeId", UUID.class, UriInfo.class);
         } catch (NoSuchMethodException | SecurityException e) {
             throw new ShopRuntimeException(e);
         }
     }
     
+    @GET
+    @Produces(APPLICATION_JSON)
+    @Path("version")
+    public String getVersion() {
+        return "{version: \"1.0\"}";
+    }
+    
     //Get für FindbyID
     //Open: findZahlungsmittelById (mock), setStrucutralLinks, getTransitionallinks
     @GET
-    //@Path
+    @Path("{" + ZAHLUNGSMITTEL_ID_PATH_PARAM + ":" + UUID_PATTERN + "}")
     public Response findById(@PathParam(ZAHLUNGSMITTEL_ID_PATH_PARAM) UUID id,
                              @Context UriInfo uriInfo) {
         // TODO Anwendungskern statt Mock
@@ -100,9 +115,26 @@ public class ZahlungsmittelResource {
     }
     
     
+    @GET
+    public Response findAll(@Context UriInfo uriInfo) {
+        final Optional<List<AbstractZahlungsmittel>> zahlungsmittelOptionalOpt = mock.findAllZahlungsmittel();
+        if (!zahlungsmittelOptionalOpt.isPresent()) {
+            return Response.status(NOT_FOUND).build();
+        }
+        
+        final List<AbstractZahlungsmittel> zahlungsmittel = zahlungsmittelOptionalOpt.get();
+        // setStructuralLinks(artikel, uriInfo);
+        
+        // Link-Header setzen
+        return Response.ok(new GenericEntity<List<AbstractZahlungsmittel>>(zahlungsmittel){})
+                       .links(getTransitionalLinks(zahlungsmittel, uriInfo))
+                       .build();
+        
+    }
+    
     //Get für FindbyKundeID: Gibt alle auf den Kunden registrierte Zahlungsmittel zurück
     @GET
-    //@Path
+    @Path("kunde/{" + KUNDE_ID_PATH_PARAM + ":[1-9]\\d*}")
     public Response findbyKundeId(@PathParam(KUNDE_ID_PATH_PARAM)UUID id, @Context UriInfo uriInfo){
         
         
@@ -130,7 +162,17 @@ public class ZahlungsmittelResource {
     
     //@POST für neues Zahlungsmittel für Kunde X
     
+    @DELETE
+    @Path("{id:" + UUID_PATTERN + "}")
+    public void delete(UUID zahlungsmittelId) {
+        mock.deleteZahlungsmittel(zahlungsmittelId);
+    }
     
+    @PUT
+    @Path("{id:" +UUID_PATTERN + "}")
+    public void update(UUID zahlungsmittelId){
+        mock.updateZahlungsmittel(zahlungsmittelId);
+    }
     
     //--------Methoden für URIs und Links----------
     //---------------------------------------------
