@@ -253,6 +253,10 @@ public class Mock {
         zahlungsmittel.setKreditkartennummer("4444-0815-4711-2142");
         zahlungsmittel.setSecuritycode("170");
         zahlungsmittel.setKarteninstitut("Deutsche Landsbank Berlin");
+        zahlungsmittel.setGueltigBis(new Date(2018));
+        zahlungsmittel.setGueltigVon(new Date(2013));
+        
+        
         
         
         
