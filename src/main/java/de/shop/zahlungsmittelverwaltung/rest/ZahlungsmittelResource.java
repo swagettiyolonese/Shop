@@ -5,14 +5,14 @@
  */
 package de.shop.zahlungsmittelverwaltung.rest;
 
-import de.shop.bestellverwaltung.domain.Bestellung;
+
 import de.shop.bestellverwaltung.rest.BestellungenResource;
 import de.shop.kundenverwaltung.domain.AbstractKunde;
 import de.shop.kundenverwaltung.rest.KundenResource;
 import de.shop.util.Mock;
 import de.shop.util.ShopRuntimeException;
 import de.shop.util.rest.UriHelper;
-import java.lang.reflect.Method;
+//import java.lang.reflect.Method;
 import java.util.Optional;
 import java.util.UUID;
 import javax.enterprise.context.RequestScoped;
@@ -26,14 +26,11 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
-import static de.shop.util.Constants.FIRST_LINK;
-import static de.shop.util.Constants.LAST_LINK;
-import static de.shop.util.Constants.SELF_LINK;
 import static de.shop.util.Constants.UUID_PATTERN;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML;
 import static javax.ws.rs.core.MediaType.TEXT_XML;
-import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+
 
 
 
@@ -58,6 +55,7 @@ import static de.shop.util.Constants.LAST_LINK;
 import static de.shop.util.Constants.SELF_LINK;
 import static javax.accessibility.AccessibleTableModelChange.UPDATE;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import java.lang.reflect.Method;
 
 
 @Path("/zahlungsmittel")
@@ -164,13 +162,13 @@ public class ZahlungsmittelResource {
     
     @DELETE
     @Path("{id:" + UUID_PATTERN + "}")
-    public void delete(UUID zahlungsmittelId) {
+    public void delete(@PathParam("id") UUID zahlungsmittelId) {
         mock.deleteZahlungsmittel(zahlungsmittelId);
     }
     
     @PUT
     @Path("{id:" +UUID_PATTERN + "}")
-    public void update(UUID zahlungsmittelId){
+    public void update(@PathParam("id") UUID zahlungsmittelId){
         mock.updateZahlungsmittel(zahlungsmittelId);
     }
     

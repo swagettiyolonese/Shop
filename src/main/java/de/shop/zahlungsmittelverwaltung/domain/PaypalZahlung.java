@@ -23,7 +23,7 @@ public class PaypalZahlung extends AbstractZahlungsmittel{
     private static final int EMAIL_LENGTH_MAX = 128;
     
     //Mailadresse
-    @NotNull(message = "{besitzer.mail.notnull}")
+    @NotNull(message = "{paypal.paypalmailadresse.notNull}")
     @Pattern(regexp=EMAIL_PATTERN, message = "{paypalzahlung.email.pattern}")
     @Size(max = EMAIL_LENGTH_MAX, message = "{kunde.email.length}")
     String paypalmailadresse;

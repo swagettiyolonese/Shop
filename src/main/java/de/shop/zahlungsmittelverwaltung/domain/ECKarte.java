@@ -18,13 +18,13 @@ import javax.validation.constraints.Pattern;
 public class ECKarte extends AbstractZahlungsmittel {
     
     
-    @NotNull(message = "{ibanCountry.notNull}")
+    @NotNull(message = "{ECKarte.ibanCountry.notNull}")
     @Pattern(regexp="\\d{2}[A-Z]")
     //IBAN-Ländercode
     private String ibanCountry;
     
     //IBAN-Nummer
-    @NotNull(message = "{ibanNumber.notNull}")
+    @NotNull(message = "{ECKarte.ibanNumber.notNull}")
     @Pattern(regexp="\\d{18}[0-9]")
     private String ibanNumber;
     
@@ -35,7 +35,7 @@ public class ECKarte extends AbstractZahlungsmittel {
     
     
     //GültigBis
-    @NotNull(message = "{ibanValidUntil.NotNull}")
+    @NotNull(message = "{ECKarte.ibanValidUntil.NotNull}")
     @Future
     private Date gueltigBis;
     

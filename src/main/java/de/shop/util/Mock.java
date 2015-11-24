@@ -322,7 +322,7 @@ public class Mock {
             zahlungsmittel.setKunde(kunde);
             zahlungsmittelList.add(zahlungsmittel);            
         });
-       // kunde.setZahlungsmittel(zahlungsmittelList);
+       
         
         
         return of (zahlungsmittelList);
