@@ -17,22 +17,26 @@
 
 package de.shop.kundenverwaltung.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import de.shop.bestellverwaltung.domain.Bestellung;
 import java.net.URI;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Past;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
 import javax.xml.bind.annotation.XmlTransient;
 
+import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.PROPERTY;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 import static de.shop.util.Constants.EMAIL_PATTERN;
 import static de.shop.util.Constants.HASH_PRIME;
@@ -42,18 +46,15 @@ import static de.shop.util.Constants.HASH_PRIME;
  */
 @XmlRootElement
 @XmlSeeAlso({ Firmenkunde.class, Privatkunde.class })
-@JsonTypeInfo(use = NAME, property = "type")
+@JsonTypeInfo(use = NAME, include = PROPERTY, property = "type")
 @JsonSubTypes({
     @Type(value = Privatkunde.class, name = AbstractKunde.PRIVATKUNDE),
-    @Type(value = Firmenkunde.class, name = AbstractKunde.FIRMENKUNDE)
-})
-//MOXy statt Jackson
-//@XmlDiscriminatorNode("@type")
+    @Type(value = Firmenkunde.class, name = AbstractKunde.FIRMENKUNDE) })
 public abstract class AbstractKunde {
     public static final String PRIVATKUNDE = "P";
     public static final String FIRMENKUNDE = "F";
     
-        //Pattern mit UTF-8 (statt Latin-1 bzw. ISO-8859-1) Schreibweise fuer Umlaute:
+    //Pattern mit UTF-8 (statt Latin-1 bzw. ISO-8859-1) Schreibweise fuer Umlaute:
     private static final String NAME_PATTERN = "[A-Z\u00C4\u00D6\u00DC][a-z\u00E4\u00F6\u00FC\u00DF]+";
     private static final String NACHNAME_PREFIX = "(o'|von|von der|von und zu|van)?";
     
@@ -61,9 +62,10 @@ public abstract class AbstractKunde {
     private static final int NACHNAME_LENGTH_MIN = 2;
     private static final int NACHNAME_LENGTH_MAX = 32;
     private static final int EMAIL_LENGTH_MAX = 128;
+
     
     private UUID id;
-    
+
     @NotNull(message = "{kunde.nachname.notNull}")
     @Size(min = NACHNAME_LENGTH_MIN, max = NACHNAME_LENGTH_MAX,
           message = "{kunde.nachname.length}")
@@ -74,16 +76,20 @@ public abstract class AbstractKunde {
     @NotNull(message = "{kunde.email.notNull}")
     @Size(max = EMAIL_LENGTH_MAX, message = "{kunde.email.length}")
     private String email;
-    
+
+    @Past(message = "{kunde.seit.past}")
+    private Date seit;
+
     @Valid
     @NotNull(message = "{kunde.adresse.notNull}")
     private Adresse adresse;
     
     @XmlTransient
+    @JsonIgnore
     private List<Bestellung> bestellungen;
     
     private URI bestellungenUri;
-
+    
     public UUID getId() {
         return id;
     }
@@ -102,6 +108,14 @@ public abstract class AbstractKunde {
     
     public void setEmail(String email) {
         this.email = email;
+    }
+    
+    public Date getSeit() {
+        return seit;
+    }
+    
+    public void setSeit(Date seit) {
+        this.seit = seit;
     }
     
     public Adresse getAdresse() {
@@ -141,13 +155,13 @@ public abstract class AbstractKunde {
         if (obj == null || getClass() != obj.getClass()) {
             return false;
         }
-        AbstractKunde other = (AbstractKunde) obj;
+        final AbstractKunde other = (AbstractKunde) obj;
         return Objects.equals(email, other.email);
     }
     
     @Override
     public String toString() {
-        return "AbstractKunde {id=" + id + ", nachname=" + nachname + ", email=" + email
+        return "AbstractKunde {id=" + id + ", nachname=" + nachname + ", email=" + email + ", seit=" + seit
                + ", bestellungenUri=" + bestellungenUri + '}';
     }
 }

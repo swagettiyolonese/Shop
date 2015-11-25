@@ -23,12 +23,9 @@
          version="3.1">
   <display-name>shop</display-name>
   <context-param>
-    <description>Mapping fuer accept in einem Webbrowser: Die Extension json ist inkompatibel mit Swagger 2.x</description>
+    <description>Mapping fuer accept in einem Webbrowser</description>
     <param-name>resteasy.media.type.mappings</param-name>
-    <param-value>xml : application/xml, image : image/*, text : text/plain</param-value>
-    <!--
     <param-value>json : application/json, xml : application/xml, image : image/*, text : text/plain</param-value>
-    -->
   </context-param>
   <context-param>
     <description>Pfadangabe bei Verletzung der Bean Validation im JSON-Response aus Sicherheitsgruenden unterdruecken</description>
@@ -47,27 +44,19 @@
     </cookie-config>
     <tracking-mode>COOKIE</tracking-mode>
   </session-config>
-  <!--
-  <servlet>
-    <servlet-name>DefaultJaxrsConfig</servlet-name>
-    <servlet-class>com.wordnik.swagger.jaxrs.config.DefaultJaxrsConfig</servlet-class>
-    <init-param>
-      <param-name>api.version</param-name>
-      <param-value>1.0</param-value>
-    </init-param>
-    <init-param>
-      <param-name>swagger.api.basepath</param-name>
-      <param-value>https://localhost:8443/shop/rest</param-value>
-    </init-param>
-    <init-param>
-      <param-name>scan.all.resources</param-name>
-      <param-value>true</param-value>
-    </init-param>
-    <init-param>
-      <param-name>ignore.routes</param-name>
-      <param-value>shop/rest/swagger.json</param-value>
-    </init-param>
-    <load-on-startup>2</load-on-startup>
-  </servlet>
-  -->
+  <env-entry>
+    <env-entry-name>absenderEmail</env-entry-name>
+    <env-entry-type>java.lang.String</env-entry-type>
+    <env-entry-value>abcd0011@hs-karlsruhe.de</env-entry-value>
+  </env-entry>
+  <env-entry>
+    <env-entry-name>absenderName</env-entry-name>
+    <env-entry-type>java.lang.String</env-entry-type>
+    <env-entry-value>Joe Doe</env-entry-value>
+  </env-entry>
+  <env-entry>
+    <env-entry-name>locales</env-entry-name>
+    <env-entry-type>java.lang.String</env-entry-type>
+    <env-entry-value>de,en</env-entry-value>
+  </env-entry>
 </web-app>

@@ -15,34 +15,42 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.shop.util.rest;
+package de.shop.artikelverwaltung.business;
 
-import java.lang.reflect.Method;
-import java.net.URI;
+import de.shop.artikelverwaltung.domain.Artikel;
+import de.shop.util.Mock;
+import de.shop.util.interceptor.Log;
+import java.util.Optional;
 import java.util.UUID;
-import javax.enterprise.context.ApplicationScoped;
-import javax.ws.rs.core.UriInfo;
+import javax.enterprise.context.Dependent;
+import javax.inject.Inject;
 
+import static java.util.Optional.ofNullable;
 
 /**
  * @author <a href="mailto:Juergen.Zimmermann@HS-Karlsruhe.de">J&uuml;rgen Zimmermann</a>
  */
-@ApplicationScoped
-public class UriHelper {
-    UriHelper() {
+@Dependent
+@Log
+public class ArtikelBroker {
+    private final Mock mock;
+    
+    @Inject
+    ArtikelBroker(Mock mock) {
         super();
+        this.mock = mock;
     }
     
-    public URI getUri(Class<?> clazz, UriInfo uriInfo) {
-        return uriInfo.getBaseUriBuilder()
-                      .path(clazz)
-                      .build();
-    }
-
-    public URI getUri(Class<?> clazz, Method method, UUID id, UriInfo uriInfo) {
-        return uriInfo.getBaseUriBuilder()
-                      .path(clazz)
-                      .path(clazz, method.getName())
-                      .build(id);
+    /**
+     * Suche eines Artikels zu gegebener ID.
+     * falls nichts gefunden wird.
+     * @param id Artikel-ID
+     * @return Der gefundene Artikel.
+     */
+    public Optional<Artikel> findById(UUID id) {
+        // TODO id pruefen
+        // TODO Datenbanzugriffsschicht statt Mock
+        final Artikel artikel = mock.findArtikelById(id);
+        return ofNullable(artikel);
     }
 }

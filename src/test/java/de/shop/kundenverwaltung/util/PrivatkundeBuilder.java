@@ -18,6 +18,7 @@ package de.shop.kundenverwaltung.util;
 
 import de.shop.kundenverwaltung.domain.Adresse;
 import de.shop.kundenverwaltung.domain.Privatkunde;
+import java.util.Date;
 
 /**
  * @author <a href="mailto:Juergen.Zimmermann@HS-Karlsruhe.de">J&uuml;rgen Zimmermann</a>
@@ -32,6 +33,11 @@ public class PrivatkundeBuilder {
     
     public PrivatkundeBuilder email(String email) {
         kunde.setEmail(email);
+        return this;
+    }
+    
+    public PrivatkundeBuilder seit(Date seit) {
+        kunde.setSeit(seit);
         return this;
     }
     

@@ -1,100 +1,52 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (C) 2013 Juergen Zimmermann, Hochschule Karlsruhe
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 package de.shop.artikelverwaltung.domain;
 
 import java.util.Objects;
 import java.util.UUID;
-import javax.validation.constraints.Digits;
-import javax.validation.constraints.Max;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
-import javax.xml.bind.annotation.XmlRootElement;
 
 import static de.shop.util.Constants.HASH_PRIME;
 
+
 /**
- * This is the domain class of an article
- * @author Jan
+ * @author <a href="mailto:Juergen.Zimmermann@HS-Karlsruhe.de">J&uuml;rgen Zimmermann</a>
  */
-@XmlRootElement
 public class Artikel {
-    
-    private static final int ARTIKELNAME_LENGTH_MIN = 2;
-    private static final int ARTIKELNAME_LENGTH_MAX = 32;
-    
-    private static final int LAGERBESTAND_MAX = 999999;
-    
-    private static final int PREIS_MAX_DIGITS = 6; // Vorkommastellen
-    private static final int PREIS_MAX_FRACTION = 2; // Nachkommastellen
-    
-    private static final int ARTIKELBESCHREIBUNG_LENGTH_MAX = 280;
-    
     private UUID id;
     
-    @NotNull(message = "{artikel.artikelName.notNull}")
-    @Size(min = ARTIKELNAME_LENGTH_MIN, //
-          max = ARTIKELNAME_LENGTH_MAX, //
-          message = "{artikel.artikelName.length}")
-    private String artikelName;
-    
-    @NotNull(message = "{artikel.lagerBestand.notNull}")
-    @Max(value = LAGERBESTAND_MAX, //
-         message = "{artikel.lagerBestand.max}")
-    private Integer lagerBestand;
-    
-    @NotNull(message = "{artikel.preis.notNull}")
-    @Digits(integer = PREIS_MAX_DIGITS, //
-            fraction = PREIS_MAX_FRACTION, //
-            message = "{artikel.preis.digits}")
-    private Float preis;
-    
-    @Size(max = ARTIKELBESCHREIBUNG_LENGTH_MAX, //
-          message = "{artikel.artikelBeschreibung.length}")
-    private String artikelBeschreibung;
+    // TODO Bean Validation
+    private String bezeichnung;
     
     public UUID getId() {
         return id;
     }
 
-    public String getArtikelName() {
-        return artikelName;
+    public String getBezeichnung() {
+        return bezeichnung;
     }
-
-    public void setArtikelName(String artikelName) {
-        this.artikelName = artikelName;
+    
+    public void setBezeichnung(String bezeichnung) {
+        this.bezeichnung = bezeichnung;
     }
-
-    public Integer getLagerBestand() {
-        return lagerBestand;
-    }
-
-    public void setLagerBestand(Integer lagerBestand) {
-        this.lagerBestand = lagerBestand;
-    }
-
-    public Float getPreis() {
-        return preis;
-    }
-
-    public void setPreis(Float preis) {
-        this.preis = preis;
-    }
-
-    public String getArtikelBeschreibung() {
-        return artikelBeschreibung;
-    }
-
-    public void setArtikelBeschreibung(String artikelBeschreibung) {
-        this.artikelBeschreibung = artikelBeschreibung;
-    }
-
+    
     @Override
     public int hashCode() {
-        final int prime = HASH_PRIME;
-        return prime + Objects.hashCode(id);
+        return HASH_PRIME + Objects.hashCode(bezeichnung);
     }
     
     @Override
@@ -106,15 +58,11 @@ public class Artikel {
             return false;
         }
         final Artikel other = (Artikel) obj;
-        return Objects.equals(id, other.id);
+        return Objects.equals(bezeichnung, other.bezeichnung);
     }
-    
+
     @Override
     public String toString() {
-        return "Artikel {id=" + id + //
-                ", artikelname=" + artikelName + //
-                ", lagerbestand=" + lagerBestand + //
-                ", preis=" + preis + //
-                ", artikelbeschreibung=" + artikelBeschreibung + '}';
+        return "Artikel {id=" + id + ", bezeichnung=" + bezeichnung + '}';
     }
 }

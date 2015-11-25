@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Juergen Zimmermann, Hochschule Karlsruhe
+ * Copyright (C) 2013-2015 Juergen Zimmermann, Hochschule Karlsruhe
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,14 +15,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-@XmlAccessorType(FIELD)
+package de.shop.kundenverwaltung.business;
 
-package de.shop.kundenverwaltung.domain;
-
-import javax.xml.bind.annotation.XmlAccessorType;
-
-import static javax.xml.bind.annotation.XmlAccessType.FIELD;
+import de.shop.util.AbstractShopException;
 
 /**
  * @author <a href="mailto:Juergen.Zimmermann@HS-Karlsruhe.de">J&uuml;rgen Zimmermann</a>
  */
+public abstract class AbstractKundenverwaltungException extends AbstractShopException {
+    private static final long serialVersionUID = -2849585609393128387L;
+
+    public AbstractKundenverwaltungException(String msg) {
+        super(msg);
+    }
+    
+    public AbstractKundenverwaltungException(String msg, Throwable t) {
+        super(msg, t);
+    }
+}

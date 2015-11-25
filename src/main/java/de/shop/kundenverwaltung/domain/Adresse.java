@@ -33,7 +33,7 @@ import static de.shop.util.Constants.HASH_PRIME;
 public class Adresse {
     private static final int ORT_LENGTH_MIN = 2;
     private static final int ORT_LENGTH_MAX = 32;
-
+    
     private UUID id;
     
     @NotNull(message = "{adresse.plz.notNull}")
@@ -84,7 +84,6 @@ public class Adresse {
         result = prime * result + Objects.hashCode(ort);
         return prime * result + Objects.hashCode(plz);
     }
-    
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
@@ -97,10 +96,10 @@ public class Adresse {
         if (!Objects.equals(id, other.id)) {
             return false;
         }
-        if (!Objects.equals(ort, other.ort)) {
+        if (!Objects.equals(plz, other.plz)) {
             return false;
         }
-        return Objects.equals(plz, other.plz);
+        return Objects.equals(ort, other.ort);
     }
     
     @Override

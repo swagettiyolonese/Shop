@@ -24,44 +24,63 @@ import de.shop.kundenverwaltung.domain.Adresse;
 import de.shop.kundenverwaltung.domain.Firmenkunde;
 import de.shop.kundenverwaltung.domain.HobbyType;
 import de.shop.kundenverwaltung.domain.Privatkunde;
+import de.shop.util.interceptor.Log;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
+import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
+import java.util.logging.Logger;
 import java.util.stream.IntStream;
+import javax.enterprise.context.Dependent;
 
-import static java.lang.System.out;
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
+import static java.lang.Math.abs;
+import static java.util.Arrays.asList;
 import static java.util.UUID.randomUUID;
 
 /**
- * Emulation des Anwendungskerns
+ * Emulation der Datenbankzugriffsschicht
  * @author <a href="mailto:Juergen.Zimmermann@HS-Karlsruhe.de">J&uuml;rgen Zimmermann</a>
  */
+@Dependent
+@Log
 public class Mock {
-    private static final long MAX_ID = 0xFFF_000_000_000L;
-    private static final int MAX_KUNDEN = 8;
-    private static final int MAX_BESTELLUNGEN = 4;
-    private static final int MAX_ARTIKEL = 5;
+    private static final Logger LOGGER = Logger.getLogger(MethodHandles.lookup().lookupClass().getName());
 
-    public Optional<AbstractKunde> findKundeById(UUID id) {
-        return findKundeById(id, true);
+    private static final long MAX_ID = 0xFFF_000_000_000L;;
+    private static final int MAX_KUNDEN = 8;
+    
+    private static final List<String> NACHNAMEN = asList("Alpha", "Beta", "Gamma", "Delta", "Epsilon");
+    private static final Random RANDOM = new Random();
+    
+    private static final int JAHR = 2001;
+    // bei Calendar werden die Monate von 0 bis 11 gezaehlt
+    private static final int MONAT = 0;
+    // bei Calendar die Monatstage ab 1 gezaehlt
+    private static final int TAG = 31;
+
+    Mock() {
+        super();
     }
     
-    private Optional<AbstractKunde> findKundeById(UUID id, boolean checkId) {
+    public AbstractKunde findKundeById(UUID id) {
+        return findKundeById(id, true);
+    }
+
+    public AbstractKunde findKundeById(UUID id, boolean checkId) {
         final String idStr = id.toString();
-        // Take only the last 12 hex ziffern (2 stupid 2 translate)
         final long tmp = Long.decode("0x" + idStr.substring(idStr.length() - 12));
         if (checkId && tmp > MAX_ID) {
-            return empty();
+            return null;
         }
         
         final AbstractKunde kunde = tmp % 2 == 1 ? new Privatkunde() : new Firmenkunde();   //NOSONAR
-        
+
         // Das private Attribut "id" setzen, ohne dass es eine set-Methode gibt
         try {
             final Field idField = AbstractKunde.class.getDeclaredField("id");
@@ -70,25 +89,29 @@ public class Mock {
         } catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
             throw new ShopRuntimeException(e);
         }
+
+        final int idx = abs(RANDOM.nextInt()) % NACHNAMEN.size();
+        final String nachname = NACHNAMEN.get(idx);
+        kunde.setNachname(nachname);
+        kunde.setEmail(nachname + "@hska.de");
+        final GregorianCalendar seitCal = new GregorianCalendar(JAHR, MONAT, TAG);
+        final Date seit = seitCal.getTime();
+        kunde.setSeit(seit);
         
-        kunde.setNachname("Nachname" + id);
-        kunde.setEmail("" + id + "@hska.de");
-        
-        // adress needs an id
         saveAdresse(randomUUID(), kunde);
         
         if (kunde.getClass().equals(Privatkunde.class)) {
             final Privatkunde privatkunde = (Privatkunde) kunde;
-            final Set<HobbyType> hobbies = new HashSet<>();
-            hobbies.add(HobbyType.LESEN);
-            hobbies.add(HobbyType.REISEN);
-            privatkunde.setHobbies(hobbies);
+            final Set<HobbyType> hobbys = new HashSet<>();
+            hobbys.add(HobbyType.LESEN);
+            hobbys.add(HobbyType.REISEN);
+            privatkunde.setHobbys(hobbys);
         }
         
-        return of(kunde);
+        return kunde;
     }
-
-    private static void saveAdresse(UUID id, AbstractKunde kunde) {
+    
+    private void saveAdresse(UUID id, AbstractKunde kunde) {
         final Adresse adresse = new Adresse();
         // Das private Attribut "id" setzen, ohne dass es eine set-Methode gibt
         try {
@@ -98,7 +121,7 @@ public class Mock {
         } catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
             throw new ShopRuntimeException(e);
         }
-        
+
         adresse.setPlz("12345");
         adresse.setOrt("Testort");
 
@@ -106,52 +129,70 @@ public class Mock {
         kunde.setAdresse(adresse);
     }
 
-    public Optional<List<AbstractKunde>> findAllKunden() {
+    public List<AbstractKunde> findAllKunden() {
         final int anzahl = MAX_KUNDEN;
         final List<AbstractKunde> kunden = new ArrayList<>(anzahl);
         IntStream.rangeClosed(1, anzahl)
                  .forEach(i -> {
-            final AbstractKunde kunde = findKundeById(randomUUID(), false).get();
+            final AbstractKunde kunde = findKundeById(randomUUID(), false);
             kunden.add(kunde);            
         });
-        return of(kunden);
+        return kunden;
     }
 
-    public Optional<List<AbstractKunde>> findKundenByNachname(String nachname) {
+    public List<AbstractKunde> findKundenByNachname(String nachname) {
         final int anzahl = nachname.length();
         final List<AbstractKunde> kunden = new ArrayList<>(anzahl);
         IntStream.rangeClosed(1, anzahl)
                  .forEach(i -> {
-            final AbstractKunde kunde = findKundeById(randomUUID(), false).get();
+            final AbstractKunde kunde = findKundeById(randomUUID(), false);
             kunde.setNachname(nachname);
             kunden.add(kunde);            
         });
-        return of(kunden);
+        return kunden;
     }
     
-
-    public Optional<List<Bestellung>> findBestellungenByKunde(AbstractKunde kunde) {
+    public AbstractKunde findKundeByEmail(String email) {
+        if (email.startsWith("x")) {
+            return null;
+        }
+        
+        final AbstractKunde kunde = findKundeById(randomUUID(), false);
+        kunde.setEmail(email);
+        return kunde;
+    }
+    
+    public List<Bestellung> findBestellungenByKunde(AbstractKunde kunde) {
         // Beziehungsgeflecht zwischen Kunde und Bestellungen aufbauen:
         // 1, 2, 3 oder 4 Bestellungen
-        final int anzahl = (int) (kunde.getId().getLeastSignificantBits() % MAX_BESTELLUNGEN) + 4;
+        final int anzahl = kunde.getNachname().length();
         final List<Bestellung> bestellungen = new ArrayList<>(anzahl);
         IntStream.rangeClosed(1, anzahl)
                  .forEach(i -> {
-            final Bestellung bestellung = findBestellungById(randomUUID()).get();
+            final Bestellung bestellung = findBestellungById(randomUUID(), false);
             bestellung.setKunde(kunde);
             bestellungen.add(bestellung);            
         });
         kunde.setBestellungen(bestellungen);
         
-        return of(bestellungen);
+        return bestellungen;
     }
 
-    public Optional<Bestellung> findBestellungById(UUID id) {
+    public Bestellung findBestellungById(UUID id) {
+        return findBestellungById(id, true);
+    }
+    
+    private Bestellung findBestellungById(UUID id, boolean check) {
+        final String idStr = id.toString();
+        final long tmp = Long.decode("0x" + id.toString().substring(idStr.length() - 12));
+        if (tmp > MAX_ID) {
+            return null;
+        }
+
         // andere ID fuer den Kunden
-        final AbstractKunde kunde = findKundeById(randomUUID(), false).get();
+        final AbstractKunde kunde = findKundeById(randomUUID(), false);
 
         final Bestellung bestellung = new Bestellung();
-
         // Das private Attribut "id" setzen, ohne dass es eine set-Methode gibt
         try {
             final Field idField = Bestellung.class.getDeclaredField("id");
@@ -160,29 +201,25 @@ public class Mock {
         } catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
             throw new ShopRuntimeException(e);
         }
-
         bestellung.setAusgeliefert(false);
         bestellung.setKunde(kunde);
-        bestellung.setArtikel(findAllArtikel().get());
-                
-        return of(bestellung);
+        
+        return bestellung;
     }
 
-    public AbstractKunde saveKunde(AbstractKunde kunde) {
+    public <T extends AbstractKunde> T saveKunde(T kunde) {
         // Neue IDs fuer Kunde und zugehoerige Adresse
         // Ein neuer Kunde hat auch keine Bestellungen
         // SecureRandom ist eigentlich sicherer, aber auch l0x langsamer (hier: nur Mock-Klasse)
-        final UUID id = randomUUID();
-
         // Das private Attribut "id" setzen, ohne dass es eine set-Methode gibt
         try {
             final Field idField = AbstractKunde.class.getDeclaredField("id");
             idField.setAccessible(true);
-            idField.set(kunde, id);
+            idField.set(kunde, randomUUID());
         } catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
             throw new ShopRuntimeException(e);
         }
-
+        
         final Adresse adresse = kunde.getAdresse();
         // Das private Attribut "id" setzen, ohne dass es eine set-Methode gibt
         try {
@@ -192,65 +229,50 @@ public class Mock {
         } catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
             throw new ShopRuntimeException(e);
         }
+        
         adresse.setKunde(kunde);
-
         kunde.setBestellungen(null);
         
-        out.println("Neuer Kunde: " + kunde);                  //NOSONAR
-        out.println("Neue Adresse: " + adresse);               //NOSONAR
+        LOGGER.info("Neuer Kunde: " + kunde);
+        LOGGER.info("Neuer Adresse: " + kunde.getAdresse());
         return kunde;
     }
 
     public void updateKunde(AbstractKunde kunde) {
-        out.println("Aktualisierter Kunde: " + kunde);         //NOSONAR
+        LOGGER.info("Aktualisierter Kunde: " + kunde);
     }
 
-    public void deleteKunde(UUID kundeId) {
-        out.println("Kunde mit ID=" + kundeId + " geloescht");   //NOSONAR
+    public void deleteKunde(AbstractKunde kunde) {
+        LOGGER.info("Geloeschter Kunde: " + kunde);
     }
-    
-    public Optional<Artikel> findArtikelById(UUID artikelId) {
-        final String idStr = artikelId.toString();
-        // Take only the last 12 hex digits
-        final long tmp = Long.decode("0x" + idStr.substring(idStr.length() - 12));
-        if (tmp > MAX_ID) {
-            return empty();
-        }
-        
-        final Artikel artikel = new Artikel();
-        
+
+    public Bestellung saveBestellung(Bestellung bestellung, AbstractKunde kunde) {
+        // SecureRandom ist eigentlich sicherer, aber auch l0x langsamer (hier: nur Mock-Klasse)
         // Das private Attribut "id" setzen, ohne dass es eine set-Methode gibt
         try {
-            final Field idField = Artikel.class.getDeclaredField("id");
+            final Field idField = Bestellung.class.getDeclaredField("id");
             idField.setAccessible(true);
-            idField.set(artikel, artikelId);
+            idField.set(bestellung, randomUUID());
         } catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
             throw new ShopRuntimeException(e);
         }
         
-        artikel.setArtikelName("Samsung Galaxy S3");
-        artikel.setLagerBestand(100);
-        artikel.setPreis((float)399.99);
+        LOGGER.info("Neue Bestellung: " + bestellung + " fuer Kunde: " + kunde);
+        return bestellung;
+    }
+
+    public Artikel findArtikelById(UUID id) {
+        final Artikel artikel = new Artikel();
+        // Das private Attribut "id" setzen, ohne dass es eine set-Methode gibt
+        try {
+            final Field idField = Artikel.class.getDeclaredField("id");
+            idField.setAccessible(true);
+            idField.set(artikel, id);
+        } catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
+            throw new ShopRuntimeException(e);
+        }
         
-        return of(artikel);
-    }
-    
-    public Optional<List<Artikel>> findAllArtikel() {
-        final int anzahl = MAX_ARTIKEL;
-        final List<Artikel> artikelList = new ArrayList<>(anzahl);
-        IntStream.rangeClosed(1, anzahl)
-                 .forEach(i -> {
-            final Artikel artikel = findArtikelById(randomUUID()).get();
-            artikelList.add(artikel);            
-        });
-        return of(artikelList);
-    }
-    
-    public void deleteArtikel(UUID artikelId) {
-        out.println("Artikel mit ID=" + artikelId + " geloescht");         //NOSONAR
-    }
-    
-    public void updateArtikel(Artikel artikel) {
-        out.println("Aktualisierter Artikel: " + artikel);         //NOSONAR
+        artikel.setBezeichnung("Bezeichnung_" + id);
+        return artikel;
     }
 }

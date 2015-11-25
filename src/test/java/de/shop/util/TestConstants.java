@@ -17,6 +17,7 @@
 
 package de.shop.util;
 
+import de.shop.artikelverwaltung.rest.ArtikelResource;
 import de.shop.bestellverwaltung.rest.BestellungenResource;
 import de.shop.kundenverwaltung.rest.KundenResource;
 import java.nio.file.Path;
@@ -41,27 +42,23 @@ public final class TestConstants {
     static final Path TRUSTSTORE_PATH = Paths.get("src", "test", "resources", "https", "truststore.p12");
     static final char[] TRUSTSTORE_PASSWORD = "zimmermann".toCharArray();
     
-    // Basis-URI
+	// Basis-URI
 	private static final String BASE_URI = HTTPS + "://" + HOST + ":" + PORT + "/" + WEB_PROJEKT + REST_PATH;
 	
 	// Pfade und Pfad-Parameter
 	public static final String KUNDEN_URI = BASE_URI + "/kunden";
 	public static final String KUNDEN_PRIVAT_URI = KUNDEN_URI + "/privat";
-	public static final String KUNDEN_ID_URI = KUNDEN_URI + "/{" + KundenResource.KUNDEN_ID_PATH_PARAM + "}";
-	public static final String KUNDEN_IMAGE_URI = KUNDEN_URI + "/image";
-	public static final String KUNDEN_IMAGE_ID_URI = KUNDEN_IMAGE_URI + "/{" + KundenResource.KUNDEN_ID_PATH_PARAM + "}";
+	public static final String KUNDEN_ID_URI = KUNDEN_URI + "/{" + KundenResource.ID_PATH_PARAM + "}";
 	
 	public static final String BESTELLUNGEN_URI = BASE_URI + "/bestellungen";
-	public static final String BESTELLUNGEN_ID_URI = BESTELLUNGEN_URI + "/{" + BestellungenResource.BESTELLUNGEN_ID_PATH_PARAM + "}";
-	public static final String BESTELLUNGEN_KUNDE_ID_URI = BESTELLUNGEN_URI + "/kunde{" + BestellungenResource.KUNDE_ID_PATH_PARAM + "}";
-	public static final String WARENKORBPOSITION_URI = BESTELLUNGEN_URI + "/warenkorbposition";
+	public static final String BESTELLUNGEN_ID_URI = BESTELLUNGEN_URI + "/{" + BestellungenResource.ID_PATH_PARAM + "}";
+	public static final String BESTELLUNGEN_ID_KUNDE_URI = BESTELLUNGEN_ID_URI + "/kunde";
 	
 	public static final String ARTIKEL_URI = BASE_URI + "/artikel";
-	public static final String ARTIKEL_ID_PATH_PARAM = "artikelId";
-	public static final String ARTIKEL_ID_URI = ARTIKEL_URI + "/{" + ARTIKEL_ID_PATH_PARAM + "}";
+	public static final String ARTIKEL_ID_URI = ARTIKEL_URI + "/{" + ArtikelResource.ID_PATH_PARAM + "}";
 	
 	public static final String NOT_EXISTING_URI = BASE_URI + "/NOT_EXISTING";
-    
+
     // Logging
     public static final String BEGINN = "BEGINN";
     public static final String ENDE = "ENDE";

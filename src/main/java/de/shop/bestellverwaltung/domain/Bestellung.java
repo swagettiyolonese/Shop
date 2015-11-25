@@ -18,10 +18,8 @@
 package de.shop.bestellverwaltung.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import de.shop.artikelverwaltung.domain.Artikel;
 import de.shop.kundenverwaltung.domain.AbstractKunde;
 import java.net.URI;
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -29,23 +27,22 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import static de.shop.util.Constants.HASH_PRIME;
 
+
 /**
  * @author <a href="mailto:Juergen.Zimmermann@HS-Karlsruhe.de">J&uuml;rgen Zimmermann</a>
  */
 @XmlRootElement
 public class Bestellung {
     private UUID id;
+    
     private boolean ausgeliefert;
     
-    @XmlTransient
-    @JsonIgnore
-    private List<Artikel> artikel;
-    
+    //NICHT @NotNull, weil der Kunde durch den Principal implizit festgelegt ist
+    //NICHT @Valid, weil der Kunde bereits vor der Bestellung existiert
     @XmlTransient
     @JsonIgnore
     private AbstractKunde kunde;
     
-    private URI artikelUri;
     private URI kundeUri;
     
     public UUID getId() {
@@ -58,22 +55,6 @@ public class Bestellung {
     
     public void setAusgeliefert(boolean ausgeliefert) {
         this.ausgeliefert = ausgeliefert;
-    }
-    
-    public List<Artikel> getArtikel() {
-        return artikel;
-    }
-
-    public void setArtikel(List<Artikel> artikel) {
-        this.artikel = artikel;
-    }
-
-    public URI getArtikelUri() {
-        return artikelUri;
-    }
-
-    public void setArtikelUri(URI artikelUri) {
-        this.artikelUri = artikelUri;
     }
     
     public AbstractKunde getKunde() {
@@ -90,11 +71,9 @@ public class Bestellung {
     public void setKundeUri(URI kundeUri) {
         this.kundeUri = kundeUri;
     }
-    
     @Override
     public int hashCode() {
-        final int prime = HASH_PRIME;
-        return prime + Objects.hashCode(id);
+        return HASH_PRIME + Objects.hashCode(id);
     }
     
     @Override
@@ -111,10 +90,6 @@ public class Bestellung {
     
     @Override
     public String toString() {
-        return "Bestellung {id=" + id //
-                + ", ausgeliefert=" + ausgeliefert //
-                + ", kundeUri=" + kundeUri //
-                + ", artikelUri=" + artikelUri
-                + '}';
+        return "Bestellung {id=" + id + ", ausgeliefert=" + ausgeliefert + ", kundeUri=" + kundeUri + '}';
     }
 }

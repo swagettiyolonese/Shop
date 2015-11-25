@@ -34,7 +34,7 @@ public final class LocationHelper {
         final int startPos = location.lastIndexOf('/');
 		final String idStr = location.substring(startPos + 1);
         assertThat(idStr)
-            .overridingErrorMessage("Die ID im Location Header muss eine UUID sein, ist aber %s", idStr)
+            .overridingErrorMessage("Die ID im Location_Header muss eine UUID sein, ist aber %s", idStr)
             .matches(UUID_PATTERN);
         
 		return fromString(idStr);

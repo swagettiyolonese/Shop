@@ -17,11 +17,48 @@
 
 package de.shop.kundenverwaltung.domain;
 
+import de.shop.util.ShopRuntimeException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+
+
 /**
  * @author <a href="mailto:Juergen.Zimmermann@HS-Karlsruhe.de">J&uuml;rgen Zimmermann</a>
  */
 public enum HobbyType {
-    SPORT,
-    LESEN,
-    REISEN;
+    SPORT("S"),
+    LESEN("L"),
+    REISEN("R");
+    
+    private static final Locale LOCALE_DEFAULT = Locale.getDefault();
+    
+    private static final Map<String, HobbyType> NAME_CACHE = new HashMap<>();
+    static {
+        Arrays.stream(HobbyType.values())
+              .forEach(hobby -> {
+            NAME_CACHE.put(hobby.value, hobby);
+            NAME_CACHE.put(hobby.name(), hobby);
+            NAME_CACHE.put(hobby.name().toLowerCase(LOCALE_DEFAULT), hobby);
+        });
+    }
+    
+    private final String value;
+    
+    private HobbyType(String value) {
+        this.value = value;
+    }
+    
+    public String getValue() {
+        return value;
+    }
+    
+    public static HobbyType build(String value) {
+        final HobbyType hobby = NAME_CACHE.get(value);
+        if (hobby == null) {
+            throw new ShopRuntimeException(value + " ist kein gueltiger Wert fuer HobbyType");
+        }
+        return hobby;
+    }
 }

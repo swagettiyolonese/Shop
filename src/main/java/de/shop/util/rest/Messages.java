@@ -17,7 +17,8 @@
 
 package de.shop.util.rest;
 
-import de.shop.util.ShopRuntimeException;
+import de.shop.util.interceptor.Log;
+import java.lang.invoke.MethodHandles;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,16 +30,22 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
+import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.enterprise.context.ApplicationScoped;
 import javax.ws.rs.core.HttpHeaders;
 
+import static java.util.logging.Level.FINER;
+
 /**
  * @author <a href="mailto:Juergen.Zimmermann@HS-Karlsruhe.de">J&uuml;rgen Zimmermann</a>
  */
 @ApplicationScoped
+@Log
 public class Messages {
+    private static final Logger LOGGER = Logger.getLogger(MethodHandles.lookup().lookupClass().getName());
+    
     private static final String APPLICATION_MESSAGES = "/ApplicationMessages";
     private static final List<Locale> LOCALES_DEFAULT = Arrays.asList(Locale.ENGLISH);
     private static final int LOCALE_LENGTH = 2;
@@ -51,6 +58,10 @@ public class Messages {
     private Map<Locale, ResourceBundle> bundles;
     // z.B. "en" als Schluessel auch fuer en_US
     private Map<String, ResourceBundle> bundlesLanguageStr;
+    
+    Messages() {
+        super();
+    }
     
     @PostConstruct
     private void postConstruct() {
@@ -66,10 +77,14 @@ public class Messages {
                     localeBuilder.setLanguage(localeStr);
                     localesList.add(localeBuilder.build());
                 } catch (IllformedLocaleException e) {
-                    throw new ShopRuntimeException(e);
+                    if (LOGGER.isLoggable(FINER)) {
+                        LOGGER.log(FINER, e.getMessage(), e);
+                    }
+                    LOGGER.warning("web.xml: " + localeStr + " ist kein gueltiger Sprachcode");
                 }
             });
         }
+        LOGGER.info("Locales fuer REST: " + localesList);
         
         bundles = new HashMap<>();
         bundlesLanguageStr = new HashMap<>();
@@ -85,6 +100,7 @@ public class Messages {
                     bundlesLanguageStr.put(localeStr, bundle);
                     languages.add(localeStr);
                 }
+                
             }
         });
         

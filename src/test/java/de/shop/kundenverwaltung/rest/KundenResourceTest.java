@@ -24,14 +24,12 @@ import de.shop.kundenverwaltung.util.AdresseBuilder;
 import de.shop.kundenverwaltung.util.PrivatkundeBuilder;
 import de.shop.util.AbstractResourceTest;
 import java.lang.invoke.MethodHandles;
+import java.util.Calendar;
 import java.util.Collection;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
@@ -42,8 +40,8 @@ import org.jboss.resteasy.api.validation.ViolationReport;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import static de.shop.kundenverwaltung.rest.KundenResource.KUNDEN_ID_PATH_PARAM;
-import static de.shop.kundenverwaltung.rest.KundenResource.KUNDEN_NACHNAME_QUERY_PARAM;
+import static de.shop.kundenverwaltung.rest.KundenResource.ID_PATH_PARAM;
+import static de.shop.kundenverwaltung.rest.KundenResource.NACHNAME_QUERY_PARAM;
 import static de.shop.kundenverwaltung.util.KundeAssert.assertThatKunde;
 import static de.shop.kundenverwaltung.util.KundenAssert.assertThatKunden;
 import static de.shop.kundenverwaltung.util.ViolationAssert.assertThatViolations;
@@ -57,9 +55,9 @@ import static de.shop.util.TestConstants.KUNDEN_URI;
 import static java.util.Locale.ENGLISH;
 import static java.util.Locale.GERMAN;
 import static java.util.UUID.fromString;
-import static java.util.concurrent.TimeUnit.SECONDS;
 import static javax.ws.rs.client.Entity.json;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+
 
 
 /**
@@ -69,19 +67,22 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 public class KundenResourceTest extends AbstractResourceTest {
     private static final Logger LOGGER = Logger.getLogger(MethodHandles.lookup().lookupClass().getName());
     
-    private static final UUID KUNDE_ID = fromString("00000001-0000-0000-0000-000000000001");
-    private static final UUID KUNDE_ID_NICHT_VORHANDEN = fromString("00000001-0000-0000-0000-FFFFFFFFFFFF");
-    private static final UUID KUNDE_ID_UPDATE = fromString("00000001-0000-0000-0000-000000000002");
-    private static final UUID KUNDE_ID_DELETE = fromString("00000001-0000-0000-0000-000000000005");
+    private static final UUID KUNDE_ID = fromString("00000001-0000-0000-0000-000000000001");;
+    private static final UUID KUNDE_ID_NICHT_VORHANDEN = fromString("00000001-0000-0000-0000-FFFFFFFFFFFF");;
+    private static final UUID KUNDE_ID_UPDATE = fromString("00000001-0000-0000-0000-000000000002");;
+    private static final UUID KUNDE_ID_DELETE = fromString("00000001-0000-0000-0000-000000000005");;
     private static final String NACHNAME = "Alpha";
     private static final String NEUER_NACHNAME = "Nachnameneu";
     private static final String NEUER_NACHNAME_INVALID = "!";
     private static final String NEUE_EMAIL = "x." + NEUER_NACHNAME + "@test.de";
     private static final String NEUE_EMAIL_INVALID = "?";
+    private static final int TAG = 1;
+    private static final int MONAT = Calendar.FEBRUARY;
+    private static final int JAHR = 2014;
+    private static final Date NEU_SEIT = new GregorianCalendar(JAHR, MONAT, TAG).getTime();
     private static final String NEUE_PLZ = "76133";
     private static final String NEUE_PLZ_INVALID = "1234";
     private static final String NEUER_ORT = "Karlsruhe";
-    private static final int TIMEOUT = 3;
 
 
     @Test
@@ -93,7 +94,7 @@ public class KundenResourceTest extends AbstractResourceTest {
         
         // When
         final Response response = getHttpsClient().target(KUNDEN_ID_URI)
-                                                  .resolveTemplate(KUNDEN_ID_PATH_PARAM, KUNDE_ID)
+                                                  .resolveTemplate(ID_PATH_PARAM, KUNDE_ID)
                                                   .request()
                                                   .accept(APPLICATION_JSON)
                                                   .get();
@@ -122,7 +123,7 @@ public class KundenResourceTest extends AbstractResourceTest {
         
         // When
         final Response response = getHttpsClient().target(KUNDEN_ID_URI)
-                                                  .resolveTemplate(KUNDEN_ID_PATH_PARAM, KUNDE_ID_NICHT_VORHANDEN)
+                                                  .resolveTemplate(ID_PATH_PARAM, KUNDE_ID_NICHT_VORHANDEN)
                                                   .request()
                                                   .accept(APPLICATION_JSON)
                                                   .acceptLanguage(GERMAN)
@@ -144,7 +145,7 @@ public class KundenResourceTest extends AbstractResourceTest {
 
         // When
         final Response response = getHttpsClient().target(KUNDEN_URI)
-                                                  .queryParam(KUNDEN_NACHNAME_QUERY_PARAM, NACHNAME)
+                                                  .queryParam(NACHNAME_QUERY_PARAM, NACHNAME)
                                                   .request()
                                                   .accept(APPLICATION_JSON)
                                                   .get();
@@ -157,41 +158,12 @@ public class KundenResourceTest extends AbstractResourceTest {
         
         final List<AbstractKunde> kunden = response.readEntity(new GenericType<List<AbstractKunde>>() { });
         assertThatKunden(kunden)
-                .isNotEmpty()
-                .doesNotContainNull()
-                .hasSameNachname(NACHNAME);
-
+            .isNotEmpty()
+            .doesNotContainNull()
+            .hasSameNachname(NACHNAME);
+        
         LOGGER.finer(ENDE);
     }
-    
-    @Test
-	@InSequence(11)
-	public void findByIdAsyncClient() throws InterruptedException, ExecutionException, TimeoutException {
-		LOGGER.finer(BEGINN);
-		
-		// Given
-		
-		// When *ASYNCHRONEN* Aufruf
-		final Future<Response> future = getHttpsClient()
-				                        .target(KUNDEN_ID_URI)
-                                        .resolveTemplate(KUNDEN_ID_PATH_PARAM, KUNDE_ID)
-                                        .request()
-                                        .accept(APPLICATION_JSON)
-				                        .async()
-                                        .get();
-	
-		// Then Abfrage in separatem Thread, damit im 1. Thread z.B. ein Dialog aufgebaut werden koennte
-		final Callable<AbstractKunde> asyncCallable = () -> {
-			final Response response = future.get(TIMEOUT, SECONDS);
-			return response.readEntity(AbstractKunde.class);
-		};
-		final AbstractKunde kunde = Executors.newSingleThreadExecutor()
-    			                             .submit(asyncCallable)
-				                             .get(TIMEOUT, SECONDS);   // Warten bis der "parallele" Thread fertig ist
-        assertThatKunde(kunde).hasId(KUNDE_ID);
-		
-		LOGGER.finer(ENDE);
-	}
     
     @Test
     @InSequence(20)
@@ -199,6 +171,8 @@ public class KundenResourceTest extends AbstractResourceTest {
         LOGGER.finer(BEGINN);
         
         // Given
+        
+        // When
         final Adresse adresse = new AdresseBuilder()
                                 .plz(NEUE_PLZ)
                                 .ort(NEUER_ORT)
@@ -209,7 +183,6 @@ public class KundenResourceTest extends AbstractResourceTest {
                                   .adresse(adresse)
                                   .build();
         
-        // When
         final Response response = getHttpsClient().target(KUNDEN_URI)
                                                   .request()
                                                   .post(json(kunde));
@@ -218,7 +191,6 @@ public class KundenResourceTest extends AbstractResourceTest {
         assertThatResponse(response)
             .hasStatusCreated()
             .hasId();
-        response.close();
 
         LOGGER.finer(ENDE);
     }
@@ -237,6 +209,7 @@ public class KundenResourceTest extends AbstractResourceTest {
         final Privatkunde kunde = new PrivatkundeBuilder()
                                   .nachname(NEUER_NACHNAME_INVALID)
                                   .email(NEUE_EMAIL_INVALID)
+                                  .seit(NEU_SEIT)
                                   .adresse(adresse)
                                   .build();
         
@@ -249,9 +222,9 @@ public class KundenResourceTest extends AbstractResourceTest {
 
         // Then
         assertThatResponse(response)
-            .hasStatusBadRequest()
-            .hasValidationException();
-
+                .hasStatusBadRequest()
+                .hasValidationException();
+        
         final Collection<ResteasyConstraintViolation> violations = response.readEntity(ViolationReport.class)
                                                                            .getParameterViolations();
         assertThatViolations(violations)
@@ -270,10 +243,8 @@ public class KundenResourceTest extends AbstractResourceTest {
         LOGGER.finer(BEGINN);
         
         // Given
-        
-        // When
         Response response = getHttpsClient().target(KUNDEN_ID_URI)
-                                            .resolveTemplate(KUNDEN_ID_PATH_PARAM, KUNDE_ID_UPDATE)
+                                            .resolveTemplate(ID_PATH_PARAM, KUNDE_ID_UPDATE)
                                             .request()
                                             .accept(APPLICATION_JSON)
                                             .get();
@@ -284,6 +255,8 @@ public class KundenResourceTest extends AbstractResourceTest {
         // Aus den gelesenen JSON-Werten ein neues JSON-Objekt mit neuem Nachnamen bauen
         kunde.setNachname(NEUER_NACHNAME);
         kunde.setEmail(NEUE_EMAIL);
+        
+        // When
         response = getHttpsClient().target(KUNDEN_URI)
                                    .request()
                                    .put(json(kunde));
@@ -302,7 +275,7 @@ public class KundenResourceTest extends AbstractResourceTest {
         
         // Given
         Response response = getHttpsClient().target(KUNDEN_ID_URI)
-                                            .resolveTemplate(KUNDEN_ID_PATH_PARAM, KUNDE_ID_DELETE)
+                                            .resolveTemplate(ID_PATH_PARAM, KUNDE_ID_DELETE)
                                             .request()
                                             .accept(APPLICATION_JSON)
                                             .get();
@@ -311,7 +284,7 @@ public class KundenResourceTest extends AbstractResourceTest {
         
         // When
         response = getHttpsClient().target(KUNDEN_ID_URI)
-                                   .resolveTemplate(KUNDEN_ID_PATH_PARAM, KUNDE_ID_DELETE)
+                                   .resolveTemplate(ID_PATH_PARAM, KUNDE_ID_DELETE)
                                    .request()
                                    .delete();
             

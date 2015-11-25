@@ -17,6 +17,7 @@
 
 package de.shop.util.rest;
 
+import de.shop.util.interceptor.Log;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.text.ParseException;
@@ -39,6 +40,7 @@ import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
  */
 @Provider
 @ApplicationScoped
+@Log
 public class DateConverter implements ParamConverter<Date>, ParamConverterProvider {
     private static final String FORMAT = "yyyy-MM-dd";
     private static final String ERROR_KEY = "invalidDate";

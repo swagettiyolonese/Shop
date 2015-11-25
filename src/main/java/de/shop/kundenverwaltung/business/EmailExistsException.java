@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Juergen Zimmermann, Hochschule Karlsruhe
+ * Copyright (C) 2013-2015 Juergen Zimmermann, Hochschule Karlsruhe
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,14 +15,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-@XmlAccessorType(FIELD)
-
-package de.shop.kundenverwaltung.domain;
-
-import javax.xml.bind.annotation.XmlAccessorType;
-
-import static javax.xml.bind.annotation.XmlAccessType.FIELD;
+package de.shop.kundenverwaltung.business;
 
 /**
  * @author <a href="mailto:Juergen.Zimmermann@HS-Karlsruhe.de">J&uuml;rgen Zimmermann</a>
  */
+public class EmailExistsException extends AbstractKundenverwaltungException {
+    private static final long serialVersionUID = 4867667611097919943L;
+    
+    private static final String MESSAGE_KEY = "kunde.emailExists";
+    private final String email;
+    
+    public EmailExistsException(String email) {
+        super("Die Email-Adresse " + email + " existiert bereits");
+        this.email = email;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    @Override
+    public String getMessageKey() {
+        return MESSAGE_KEY;
+    }
+}

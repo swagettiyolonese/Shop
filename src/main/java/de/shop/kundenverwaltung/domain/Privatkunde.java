@@ -24,21 +24,19 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author <a href="mailto:Juergen.Zimmermann@HS-Karlsruhe.de">J&uuml;rgen Zimmermann</a>
  */
 @XmlRootElement
-//MOXy statt Jackson
-//@XmlDiscriminatorValue(AbstractKunde.FIRMENKUNDE)
 public class Privatkunde extends AbstractKunde {
-    private static final long serialVersionUID = -3177911520687689458L;
-    
-    private Set<HobbyType> hobbies;
+    private Set<HobbyType> hobbys;
 
-    public Set<HobbyType> getHobbies() {
-        return hobbies;
+    public Set<HobbyType> getHobbys() {
+        return hobbys;
     }
-    public void setHobbies(Set<HobbyType> hobbies) {
-        this.hobbies = hobbies;
+    
+    public void setHobbys(Set<HobbyType> hobbys) {
+        this.hobbys = hobbys;
     }
+    
     @Override
     public String toString() {
-        return "Privatkunde {" + super.toString() + ", hobbies=" + hobbies + '}';
+        return "Privatkunde {" + super.toString() + ", hobbys=" + hobbys + '}';
     }
 }

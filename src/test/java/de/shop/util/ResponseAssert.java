@@ -86,14 +86,14 @@ public class ResponseAssert extends AbstractAssert<ResponseAssert, Response> {
     public ResponseAssert hasSelfLinkMitId(UUID id) {
         assertThat(actual.getLink(SELF_LINK).getUri().toString())
             .overridingErrorMessage("Es gibt keinen Link-Header self, der die ID %s enthaelt", id)
-            .contains(String.valueOf(id));
+            .contains(id.toString());
         return this;
     }
     
     public ResponseAssert hasId() {
         final UUID actualId = extractId(actual);
         assertThat(actualId)
-            .overridingErrorMessage("Die ID im Location-Header muss positiv sein, ist aber %s", actualId)
+            .overridingErrorMessage("Im Location-Header muss die ID vorhanden sein", actualId)
             .isNotNull();
         return this;
     }

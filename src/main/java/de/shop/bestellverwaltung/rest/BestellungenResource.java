@@ -17,12 +17,13 @@
 
 package de.shop.bestellverwaltung.rest;
 
-import de.shop.artikelverwaltung.rest.ArtikelResource;
+import de.shop.bestellverwaltung.business.BestellungenBroker;
 import de.shop.bestellverwaltung.domain.Bestellung;
+import de.shop.kundenverwaltung.business.KundenBroker;
 import de.shop.kundenverwaltung.domain.AbstractKunde;
 import de.shop.kundenverwaltung.rest.KundenResource;
-import de.shop.util.Mock;
 import de.shop.util.ShopRuntimeException;
+import de.shop.util.interceptor.Log;
 import de.shop.util.rest.UriHelper;
 import java.lang.reflect.Method;
 import java.net.URI;
@@ -30,6 +31,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import javax.enterprise.context.RequestScoped;
+import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -42,6 +44,7 @@ import javax.ws.rs.core.Link;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
+import static de.shop.util.Constants.ADD_LINK;
 import static de.shop.util.Constants.FIRST_LINK;
 import static de.shop.util.Constants.LAST_LINK;
 import static de.shop.util.Constants.SELF_LINK;
@@ -51,6 +54,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_XML;
 import static javax.ws.rs.core.MediaType.TEXT_XML;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 
+
 /**
  * @author <a href="mailto:Juergen.Zimmermann@HS-Karlsruhe.de">J&uuml;rgen Zimmermann</a>
  */
@@ -58,17 +62,16 @@ import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 @Produces({ APPLICATION_JSON, APPLICATION_XML + ";qs=0.75", TEXT_XML + ";qs=0.5" })
 @Consumes({ APPLICATION_JSON, APPLICATION_XML, TEXT_XML })
 @RequestScoped
+@Log
 public class BestellungenResource {
-    public static final String BESTELLUNGEN_ID_PATH_PARAM = "id";
-    public static final String KUNDE_ID_PATH_PARAM = "id";
-    
     public static final Method FIND_BY_ID;
     public static final Method FIND_BY_KUNDE_ID;
-    
-    @Inject
+
+    public static final String ID_PATH_PARAM = "id";
+
+    private BestellungenBroker bestellungenBroker;
     private UriHelper uriHelper;
-    
-    private final Mock mock = new Mock();
+    private Instance<KundenBroker> kundenBrokerInstance;
 
     static {
         try {
@@ -79,12 +82,33 @@ public class BestellungenResource {
         }
     }
 
+    /**
+     * Public Default-Konstruktor f&uuml;r JAX-RS
+     */
+    public BestellungenResource() {
+        super();
+    }
+    
+    /**
+     * Package-private Konstruktor mit "Constructor Injection" f&uuml;r CDI
+     * @param bestellungenBroker zu injizierendes Objekt f&uuml;r BestellungenBroker
+     * @param uriHelperInstance zu injizierendes Instance-Objekt f&uuml;r UriHelper
+     * @param kundenBrokerInstance zu injizierendes Instance-Objekt f&uuml;r KundenBroker
+     */
+    @Inject
+    BestellungenResource(BestellungenBroker bestellungenBroker,
+                         UriHelper uriHelper,
+                         Instance<KundenBroker> kundenBrokerInstance) {
+        super();
+        this.bestellungenBroker = bestellungenBroker;
+        this.uriHelper = uriHelper;
+        this.kundenBrokerInstance = kundenBrokerInstance;
+    }
+
     @GET
-    @Path("{" + BESTELLUNGEN_ID_PATH_PARAM + ":" + UUID_PATTERN + "}")
-    public Response findById(@PathParam(BESTELLUNGEN_ID_PATH_PARAM) UUID id,
-                             @Context UriInfo uriInfo) {
-        // TODO Anwendungskern statt Mock
-        final Optional<Bestellung> bestellungOpt = mock.findBestellungById(id);
+    @Path("{" + ID_PATH_PARAM + ":" + UUID_PATTERN + "}")
+    public Response findById(@PathParam(ID_PATH_PARAM) UUID id, @Context UriInfo uriInfo) {
+        final Optional<Bestellung> bestellungOpt = bestellungenBroker.findById(id);
         if (!bestellungOpt.isPresent()) {
             return Response.status(NOT_FOUND).build();
         }
@@ -97,82 +121,72 @@ public class BestellungenResource {
                        .links(getTransitionalLinks(bestellung, uriInfo))
                        .build();
     }
-     
-//    @Path("kunde/{" + KUNDE_ID_PATH_PARAM + ":[1-9]\\d*}")
+    
+        
     @GET
-    @Path("kunde/{" + KUNDE_ID_PATH_PARAM + ":" + UUID_PATTERN + "}")
-    public Response findByKundeId(@PathParam(KUNDE_ID_PATH_PARAM) UUID kundeId,
-                                  @Context UriInfo uriInfo) {
-        // TODO Anwendungskern statt Mock
-        final Optional<AbstractKunde> kundeOpt = mock.findKundeById(kundeId);
+    @Path("kunde/{id:" + UUID_PATTERN + "}")
+    public Response findByKundeId(@PathParam("id") UUID kundeId, @Context UriInfo uriInfo) {
+        final Optional<AbstractKunde> kundeOpt = kundenBrokerInstance.get().findById(kundeId);
         if (!kundeOpt.isPresent()) {
             return Response.status(NOT_FOUND).build();
         }
         
         final AbstractKunde kunde = kundeOpt.get();
-        final Optional<List<Bestellung>> bestellungenOpt = mock.findBestellungenByKunde(kunde);
+        final Optional<List<Bestellung>> bestellungenOpt = bestellungenBroker.findByKunde(kunde);
+        // URIs innerhalb der gefundenen Bestellungen anpassen
         if (!bestellungenOpt.isPresent()) {
             return Response.status(NOT_FOUND).build();
         }
         
         final List<Bestellung> bestellungen = bestellungenOpt.get();
-        // URIs innerhalb der gefundenen Bestellungen anpassen
         bestellungen.forEach(b -> setStructuralLinks(b, uriInfo));
-        
-        return Response.ok(new GenericEntity<List<Bestellung>>(bestellungen){})     //NOSONAR
+        return Response.ok(new GenericEntity<List<Bestellung>>(bestellungen) {})      //NOSONAR
                        .links(getTransitionalLinks(bestellungen, uriInfo))
                        .build();
     }
-
     
     //--------------------------------------------------------------------------
     // Methoden fuer URIs und Links
     //--------------------------------------------------------------------------
-    public URI getUriBestellung(Bestellung bestellung, UriInfo uriInfo) {
+    
+    private URI getUriBestellung(Bestellung bestellung, UriInfo uriInfo) {
         return uriHelper.getUri(BestellungenResource.class, FIND_BY_ID, bestellung.getId(), uriInfo);
     }
-    
-    public URI getUriKunde(AbstractKunde kunde, UriInfo uriInfo) {
-        return uriHelper.getUri(KundenResource.class, FIND_BY_ID, kunde.getId(), uriInfo);
-    }
 
-    private URI getUriArtikel(Bestellung bestellung, UriInfo uriInfo) {
-        return uriHelper.getUri(ArtikelResource.class, ArtikelResource.FIND_BY_BESTELLUNG_ID, bestellung.getId(), uriInfo);
-    }        
-    
-    public void setStructuralLinks(Bestellung bestellung, UriInfo uriInfo) {
+    private void setStructuralLinks(Bestellung bestellung, UriInfo uriInfo) {
         // URI fuer Kunde setzen
         final AbstractKunde kunde = bestellung.getKunde();
         if (kunde != null) {
-            final URI kundeUri = getUriKunde(kunde, uriInfo);
+            final URI kundeUri = uriHelper.getUri(KundenResource.class, KundenResource.FIND_BY_ID, kunde.getId(), uriInfo);
             bestellung.setKundeUri(kundeUri);
         }
-        bestellung.setArtikelUri(getUriArtikel(bestellung, uriInfo));
     }
     
     private Link[] getTransitionalLinks(Bestellung bestellung, UriInfo uriInfo) {
         final Link self = Link.fromUri(getUriBestellung(bestellung, uriInfo))
                               .rel(SELF_LINK)
                               .build();
-        return new Link[] { self };
+        final Link add = Link.fromUri(uriHelper.getUri(BestellungenResource.class, uriInfo))
+                             .rel(ADD_LINK)
+                             .build();
+
+        return new Link[] { self, add };
     }
     
-        
     private Link[] getTransitionalLinks(List<Bestellung> bestellungen, UriInfo uriInfo) {
         if (bestellungen == null || bestellungen.isEmpty()) {
             return new Link[0];
         }
-   
+        
         final Link first = Link.fromUri(getUriBestellung(bestellungen.get(0), uriInfo))
                                .rel(FIRST_LINK)
                                .build();
-        final int lastPos = bestellungen.size() - 1;
         
+        final int lastPos = bestellungen.size() - 1;
         final Link last = Link.fromUri(getUriBestellung(bestellungen.get(lastPos), uriInfo))
                               .rel(LAST_LINK)
                               .build();
         
         return new Link[] { first, last };
     }
-    
 }

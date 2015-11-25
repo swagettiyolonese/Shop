@@ -15,30 +15,33 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.shop.util;
+package de.shop.util.mail;
+
+import java.io.Serializable;
+import javax.annotation.Resource;
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.inject.Produces;
 
 /**
  * @author <a href="mailto:Juergen.Zimmermann@HS-Karlsruhe.de">J&uuml;rgen Zimmermann</a>
  */
-public final class Constants {
-    public static final String REST_PATH = "/rest";
+@ApplicationScoped
+public class NameConfig implements Serializable {
+    private static final long serialVersionUID = 3916523726340426731L;
+
+    // In src\webapp\WEB-INF\web.xml koennen die Werte gesetzt bzw. ueberschrieben werden
     
-    public static final String UUID_PATTERN = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
-    
-    public static final int HASH_PRIME = 31;
-    
-    // Bean Validation
-    public static final String EMAIL_PATTERN = "[\\w.%-]+@[\\w.%-]+\\.[A-Za-z]{2,4}";
-    
-    // Header-Links
-    public static final String SELF_LINK = "self";
-    public static final String LIST_LINK = "list";
-    public static final String ADD_LINK = "add";
-    public static final String UPDATE_LINK = "update";
-    public static final String REMOVE_LINK = "remove";
-    public static final String FIRST_LINK = "first";
-    public static final String LAST_LINK = "last";
-    
-    private Constants() {
+    @Resource(name = "absenderEmail")
+    @Produces
+    @AbsenderEmail
+    private static String absenderEmail;                                //NOPMD
+        
+    @Resource(name = "absenderName")
+    @Produces
+    @AbsenderName
+    private static String absenderName;                                //NOPMD
+
+    NameConfig() {
+        super();
     }
 }

@@ -28,6 +28,7 @@ import org.jboss.arquillian.junit.InSequence;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import static de.shop.bestellverwaltung.rest.BestellungenResource.ID_PATH_PARAM;
 import static de.shop.bestellverwaltung.util.BestellungAssert.assertThatBestellung;
 import static de.shop.util.ResponseAssert.assertThatResponse;
 import static de.shop.util.TestConstants.BEGINN;
@@ -35,7 +36,6 @@ import static de.shop.util.TestConstants.BESTELLUNGEN_ID_URI;
 import static de.shop.util.TestConstants.ENDE;
 import static java.util.UUID.fromString;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-
 
 
 /**
@@ -56,18 +56,18 @@ public class BestellungenResourceTest extends AbstractResourceTest {
         
         // When
         Response response = getHttpsClient().target(BESTELLUNGEN_ID_URI)
-                                            .resolveTemplate(BestellungenResource.BESTELLUNGEN_ID_PATH_PARAM, BESTELLUNG_ID)
+                                            .resolveTemplate(ID_PATH_PARAM, BESTELLUNG_ID)
                                             .request()
                                             .accept(APPLICATION_JSON)
                                             .get();
             
         // Then
         assertThatResponse(response).hasStatusOk();
+
         final Bestellung bestellung = response.readEntity(Bestellung.class);
-        
         assertThatBestellung(bestellung)
             .hasId(BESTELLUNG_ID)
-            .hasKundeUri(); 
+            .hasKundeUri();
 
         LOGGER.finer(ENDE);
     }
