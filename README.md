@@ -48,3 +48,8 @@ Bin selber kein krasser Experte, aber die Basics hab ich drauf. Also ruhig frage
 
 <h3>Server starten etc.</h3>
 Nach Serverstart, Bauen und Deployen der Shop.war, ist der Server unter https://localhost:8443/shop/rest/xxx erreichbar
+
+<h3><b>Aktueller Stand vom master</b></h3>
+Der Master hat das Update #3 vom Jürgen -> D.h. alle unseren Features und Funktionen von Abgabe #1 sind verloren :(
+
+Falls ihr noch nicht hinzugefügte Änderungen von Abgabe #1 habt, dann commited und pushed einfach auf den Featurebranches von Abgabe #1. Der master sollte immer den aktuellsten Stand haben.
